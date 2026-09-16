@@ -53,9 +53,9 @@ jobs:
       - name: Validate bilingual retail and build eight web apps
         run: |
           set -o pipefail
+          (cd examples && npm ci)
           node scripts/check_retail_i18n.cjs | tee semantic-materialize-evidence/i18n.txt
           cd examples
-          npm ci
           npm run build | tee ../semantic-materialize-evidence/web-build.txt
       - name: Export only verified Git blobs (no ref or release changes)
         env:
