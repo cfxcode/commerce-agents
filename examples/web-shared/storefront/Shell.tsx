@@ -8,6 +8,7 @@ import { ActivityButton } from "../ActivityButton";
 import type { AgentApi } from "../api";
 import { Composer } from "../Composer";
 import { Icon, type IconName } from "../icons";
+import { currentLocale, t } from "../i18n";
 import { Inspector } from "../Inspector";
 import type { AgentTurn } from "../turn";
 import { Avatar } from "../ui";
@@ -57,6 +58,7 @@ export function StoreShell<V extends string>({
   onPanelOpenChange,
   placeholder,
   banner,
+  languageControl,
   children,
 }: {
   brand: ReactNode;
@@ -79,6 +81,7 @@ export function StoreShell<V extends string>({
   placeholder: string;
   /** A strip between the app bar and the page. */
   banner?: ReactNode;
+  languageControl?: ReactNode;
   children: ReactNode;
 }) {
   const [activityOpen, setActivityOpen] = useState(false);
@@ -121,9 +124,9 @@ export function StoreShell<V extends string>({
   return (
     <FrameContext.Provider value={frame}>
       <div className="flex h-dvh flex-col text-(--ink)">
-        <header className="flex h-[58px] shrink-0 items-center gap-2 border-b border-(--line) bg-(--chrome) px-3 sm:gap-5 sm:px-5">
+        <header className="flex h-[58px] shrink-0 items-center gap-1 border-b border-(--line) bg-(--chrome) px-2 sm:gap-5 sm:px-5">
           <div className="flex shrink-0 items-center">{brand}</div>
-          <nav className="flex min-w-0 items-center gap-1" aria-label="Views">
+          <nav className="flex min-w-0 items-center gap-1" aria-label={t("Views")}>
             {views.map((item) => {
               const active = item.id === view;
               return (
@@ -148,7 +151,8 @@ export function StoreShell<V extends string>({
               );
             })}
           </nav>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            {languageControl}
             <ActivityButton
               streaming={chat.streaming}
               newMemoryCount={chat.newMemoryKeys.size}
@@ -158,7 +162,7 @@ export function StoreShell<V extends string>({
               ref={bagButtonRef}
               type="button"
               onClick={() => onPanelOpenChange(true)}
-              aria-label={`Open ${bag.label.toLowerCase()}, ${bag.count} ${bag.noun}${bag.count === 1 ? "" : "s"}`}
+              aria-label={currentLocale() === "zh-CN" ? `打开${bag.label}，${bag.count} ${bag.noun}` : `Open ${bag.label.toLowerCase()}, ${bag.count} ${bag.noun}${bag.count === 1 ? "" : "s"}`}
               className="flex h-[34px] items-center gap-2 rounded-full bg-(--ink) pl-3 pr-1.5 text-[13px] font-semibold text-(--surface) transition hover:brightness-110 xl:hidden"
             >
               <Icon name="bag" size={16} />
@@ -168,7 +172,7 @@ export function StoreShell<V extends string>({
               <span
                 key={bag.count}
                 data-cart-target
-                className="ac-pop grid h-[22px] min-w-[22px] place-items-center rounded-full bg-(--surface) px-1 text-[11.5px] font-bold tabular-nums text-(--ink)"
+                className="ac-pop hidden h-[22px] min-w-[22px] place-items-center rounded-full bg-(--surface) px-1 text-[11.5px] font-bold tabular-nums text-(--ink) min-[380px]:grid"
               >
                 {bag.count}
               </span>
@@ -176,14 +180,14 @@ export function StoreShell<V extends string>({
             <button
               type="button"
               onClick={() => setAccountOpen(true)}
-              aria-label={`${shopper.name}: profile and memory`}
+              aria-label={currentLocale() === "zh-CN" ? `${shopper.name}：个人资料与记忆` : `${shopper.name}: profile and memory`}
               className="flex items-center gap-2.5 rounded-full py-0.5 pl-0.5 pr-1 text-left transition-colors hover:bg-(--well)/60 md:pr-3"
             >
               <Avatar name={shopper.name} />
               <span className="hidden min-w-0 md:block">
                 <span className="block truncate text-[13px] font-semibold leading-tight">{shopper.name}</span>
                 {shopper.tier ? (
-                  <span className="block truncate text-[11.5px] leading-tight text-(--ink-soft)">{shopper.tier}</span>
+                  <span className="block truncate text-[11.5px] leading-tight text-(--ink-soft)">{t(shopper.tier)}</span>
                 ) : null}
               </span>
             </button>
@@ -203,7 +207,7 @@ export function StoreShell<V extends string>({
                 send={ask}
                 ready={chat.ready}
                 busy={chat.busy}
-                label={`Message ${assistantName}`}
+                label={currentLocale() === "zh-CN" ? `向 ${assistantName} 发送消息` : `Message ${assistantName}`}
                 placeholder={placeholder}
                 className="mx-auto max-w-[760px]"
               />
@@ -248,7 +252,7 @@ export function StoreShell<V extends string>({
             trace={chat.trace}
             memory={chat.memory}
             newMemoryKeys={chat.newMemoryKeys}
-            memoryTitle={`What ${assistantName} knows`}
+            memoryTitle={currentLocale() === "zh-CN" ? `${assistantName} 记住的信息` : `What ${assistantName} knows`}
             onClose={() => setActivityOpen(false)}
           />
         ) : null}

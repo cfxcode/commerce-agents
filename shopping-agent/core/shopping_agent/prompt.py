@@ -204,12 +204,15 @@ def build_dynamic_context(
     max_chars: int = 6000,
     account: dict[str, Any] | None = None,
     account_max_chars: int = 2000,
+    response_language: str | None = None,
 ) -> str:
     """The per-request half, appended after the cache breakpoint and wrapped in the data
     fence. ``account`` (StorefrontBackend.get_account_context) has its own size cap so a
     verbose backend cannot crowd out the rest of the block."""
 
     payload: dict[str, Any] = {}
+    if response_language is not None:
+        payload["response_language"] = response_language
     if preferences is not None:
         payload["customer"] = {
             "name": preferences.display_name,

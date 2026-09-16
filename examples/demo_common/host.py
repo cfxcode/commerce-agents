@@ -168,6 +168,7 @@ def stream_turn(
     and reported generically. Memory extraction runs after the response has streamed."""
 
     async def event_stream() -> AsyncIterator[str]:
+        chinese = getattr(session, "response_language", None) == "Simplified Chinese"
         try:
             async for event in agent.stream_turn(record.messages, session, record.state):
                 if event.type == "turn_complete" and event.data.get("results_cleared"):
@@ -177,7 +178,9 @@ def stream_turn(
             logger.exception("chat turn failed: API authentication")
             yield to_sse(
                 AgentEvent.error(
-                    f"Anthropic API authentication failed (401). Check ANTHROPIC_API_KEY in "
+                    f"API 鉴权失败（401）。请检查 {env_hint} 或项目根目录 .env 中的 ANTHROPIC_API_KEY，并重启服务。"
+                    if chinese
+                    else f"Anthropic API authentication failed (401). Check ANTHROPIC_API_KEY in "
                     f"{env_hint} or the repo-root .env, unset any stale key exported by your "
                     "shell, or restart with COMMERCE_DEMO_AUTH=sdk to use the SDK's own "
                     "credential chain."
@@ -189,14 +192,20 @@ def stream_turn(
             if any(word in described for word in ("authentication", "credential", "api_key")):
                 yield to_sse(
                     AgentEvent.error(
-                        "No Anthropic API credentials are configured, so chat can't run. Set "
+                        f"尚未配置 API 凭据，无法使用对话。请在 {env_hint} 或项目根目录 .env 中设置 ANTHROPIC_API_KEY 并重启；其他功能仍可使用。"
+                        if chinese
+                        else "No Anthropic API credentials are configured, so chat can't run. Set "
                         f"ANTHROPIC_API_KEY in {env_hint} or the repo-root .env and restart; "
                         "everything except chat works without one."
                     )
                 )
             else:
                 yield to_sse(
-                    AgentEvent.error("Something went wrong on our side. Please try again.")
+                    AgentEvent.error(
+                        "服务端发生错误，请重试。"
+                        if chinese
+                        else "Something went wrong on our side. Please try again."
+                    )
                 )
         else:
             spawn_background(agent.update_memory(record.messages, session))

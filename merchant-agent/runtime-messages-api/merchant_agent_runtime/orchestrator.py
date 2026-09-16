@@ -38,6 +38,7 @@ from commerce_common.prompt_assembly import (
     build_request_messages,
     build_system_blocks,
     with_eager_input,
+    with_response_language,
     with_tool_cache_control,
 )
 from commerce_common.skills import SkillRegistry
@@ -157,8 +158,11 @@ class MerchantAgent:
             memory_facts=list(memory_facts or []),
             now=session.local_now(),
             merchant_context_max_chars=self.config.max_context_chars,
+            response_language=session.response_language,
         )
-        system = build_system_blocks(self._static_system, context)
+        system = build_system_blocks(
+            with_response_language(self._static_system, session.response_language), context
+        )
         # Delegates post progress lines while their executions are in flight; the loop
         # below drains them into the stream between the tool_call and tool_result events.
         progress: asyncio.Queue[AgentEvent | None] = asyncio.Queue()

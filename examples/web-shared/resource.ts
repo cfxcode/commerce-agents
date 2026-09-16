@@ -4,6 +4,7 @@
 "use client";
 
 import { type DependencyList, useEffect, useState } from "react";
+import { useLocale } from "./i18n";
 
 /**
  * Loads one read and reloads when `deps` change. `data` keeps its last good value;
@@ -11,6 +12,7 @@ import { type DependencyList, useEffect, useState } from "react";
  * load yet, e.g. before the session exists).
  */
 export function useResource<T>(load: (() => Promise<T | null>) | null, deps: DependencyList): { data: T | null; failed: boolean } {
+  const { locale } = useLocale();
   const [data, setData] = useState<T | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -25,6 +27,6 @@ export function useResource<T>(load: (() => Promise<T | null>) | null, deps: Dep
       cancelled = true;
     };
     // The caller's deps say when to reload; `load` is usually an inline closure.
-  }, deps);
+  }, [locale, ...deps]);
   return { data, failed };
 }

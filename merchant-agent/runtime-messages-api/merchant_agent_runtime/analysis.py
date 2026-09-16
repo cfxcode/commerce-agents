@@ -23,7 +23,7 @@ from pydantic import BaseModel, ValidationError
 
 from commerce_common.delegation import DelegateExtension, DelegationContext
 from commerce_common.execution import without_status
-from commerce_common.prompt_assembly import with_tool_cache_control
+from commerce_common.prompt_assembly import with_response_language, with_tool_cache_control
 from commerce_common.skills import SkillRegistry
 from commerce_common.streaming import AgentEvent
 from commerce_common.turn import accumulate_usage, log_model_call
@@ -152,6 +152,10 @@ class AnalysisRunner:
 
         brief = {key: _clamp(value) for key, value in args.items() if value}
         text = "Analysis task:\n" + json.dumps(brief, ensure_ascii=False, indent=2)
+        if language := getattr(session, "response_language", None):
+            text = (
+                f"Write all submitted analysis text and progress messages in {language}.\n\n" + text
+            )
         if self._sql_supported:
             try:
                 schema = await self._backend.get_analysis_schema(session)
@@ -207,7 +211,9 @@ class AnalysisRunner:
                 "system": [
                     {
                         "type": "text",
-                        "text": self._system,
+                        "text": with_response_language(
+                            self._system, getattr(context.session, "response_language", None)
+                        ),
                         "cache_control": {"type": "ephemeral"},
                     }
                 ],
@@ -313,7 +319,20 @@ class AnalysisRunner:
         if context.emit_status is None or step == 1:
             return
         verbs = sorted({_STEP_VERBS.get(name, "working") for name in last_tools} or {"working"})
-        context.emit_status(f"analysis: step {step} — {', '.join(verbs)}")
+        if getattr(context.session, "response_language", None) == "Simplified Chinese":
+            localized = {
+                "reading the snapshot": "读取业务概览",
+                "querying metrics": "查询指标",
+                "reading campaigns": "读取营销活动",
+                "scanning listings": "检查商品",
+                "running a query": "执行查询",
+                "working": "处理中",
+            }
+            context.emit_status(
+                f"分析：第 {step} 步 — {'、'.join(localized[verb] for verb in verbs)}"
+            )
+        else:
+            context.emit_status(f"analysis: step {step} — {', '.join(verbs)}")
 
     def _sanitize(self, text: str, max_chars: int | None) -> str:
         return MERCHANT_FENCE.sanitize_text(text, max_chars)

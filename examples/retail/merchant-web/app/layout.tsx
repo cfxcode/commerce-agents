@@ -3,6 +3,8 @@
 
 import type { Metadata } from "next";
 import { Instrument_Sans } from "next/font/google";
+import { LocaleProvider } from "web-shared";
+import translations from "../../data/locales/zh-CN.json";
 import "./globals.css";
 
 const instrumentSans = Instrument_Sans({
@@ -18,8 +20,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={instrumentSans.variable}>
-      <body>{children}</body>
+    <html lang="en" className={instrumentSans.variable} suppressHydrationWarning>
+      <body><LocaleProvider translations={translations}>{children}</LocaleProvider></body>
     </html>
   );
 }

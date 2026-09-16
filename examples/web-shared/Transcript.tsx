@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { AssistantText, ErrorBubble, UserBubble } from "./MessageBubble";
 import type { AssistantChatItem, ChatItem, UISegment } from "./protocol";
 import { Suggestions } from "./Suggestions";
+import { t } from "./i18n";
 
 export interface TranscriptProps {
   items: ChatItem[];
@@ -33,7 +34,7 @@ export function ActivityLine({ item }: { item: AssistantChatItem }) {
   }
   if (item.segments.length) return null;
   return (
-    <div role="status" aria-label="Working" className="flex flex-col gap-2">
+    <div role="status" aria-label={t("Working")} className="flex flex-col gap-2">
       <div className="ac-skeleton h-4 w-3/5 rounded" />
       <div className="ac-skeleton h-4 w-2/5 rounded" />
     </div>
@@ -94,7 +95,7 @@ export function LatestPill({ onClick }: { onClick: () => void }) {
         onClick={onClick}
         className="pointer-events-auto rounded-full border border-(--line) bg-(--card) px-3.5 py-1.5 text-[13px] font-semibold text-(--ink) shadow-md transition hover:border-(--accent)"
       >
-        ↓ Latest
+        ↓ {t("Latest")}
       </button>
     </div>
   );

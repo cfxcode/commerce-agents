@@ -238,12 +238,15 @@ def build_dynamic_context(
     now: datetime | None = None,
     max_chars: int = 6000,
     merchant_context_max_chars: int = 2000,
+    response_language: str | None = None,
 ) -> str:
     """The per-request half, appended after the cache breakpoint and wrapped in the
     merchant data fence. ``merchant_context`` (MerchantBackend.get_merchant_context) has
     its own size cap so a verbose backend cannot crowd out the rest of the block."""
 
     payload: dict[str, Any] = {}
+    if response_language is not None:
+        payload["response_language"] = response_language
     if merchant_context is not None:
         rendered = json.dumps(merchant_context, ensure_ascii=False, default=str)
         if len(rendered) > merchant_context_max_chars:

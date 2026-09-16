@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AgentEvent, MemoryFact, Order } from "./protocol";
+import { currentLocale, translateDeep, type Locale } from "./i18n-core";
 
 const SESSION_HEADER = "X-Session-Id";
 
@@ -29,7 +30,7 @@ export class AgentApi {
   }
 
   headers(json = false): Record<string, string> {
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = { "X-Locale": currentLocale() };
     if (this.session) headers[SESSION_HEADER] = this.session;
     if (json) headers["Content-Type"] = "application/json";
     return headers;
@@ -61,10 +62,11 @@ export class AgentApi {
   }
 
   private async request<T>(path: string, init: RequestInit): Promise<T | null> {
+    const locale = currentLocale();
     try {
       const response = await fetch(`${this.base}${path}`, init);
       if (!response.ok) return null;
-      return (await response.json()) as T;
+      return translateDeep((await response.json()) as T, locale);
     } catch {
       return null;
     }
@@ -106,17 +108,18 @@ export class AgentApi {
 
   /** Throws when the request itself fails. */
   async *chatStream(message: string): AsyncGenerator<AgentEvent> {
+    const locale = currentLocale();
     const response = await fetch(`${this.base}/chat`, {
       method: "POST",
       headers: this.headers(true),
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, locale }),
     });
     if (!response.ok || !response.body) throw new Error(`chat request failed: ${response.status}`);
-    yield* readEventStream(response.body);
+    yield* readEventStream(response.body, locale);
   }
 }
 
-async function* readEventStream(body: ReadableStream<Uint8Array>): AsyncGenerator<AgentEvent> {
+async function* readEventStream(body: ReadableStream<Uint8Array>, locale: Locale): AsyncGenerator<AgentEvent> {
   const reader = body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
@@ -133,7 +136,7 @@ async function* readEventStream(body: ReadableStream<Uint8Array>): AsyncGenerato
         eventType = line.slice(7).trim();
       } else if (line.startsWith("data: ") && eventType) {
         try {
-          yield { type: eventType, data: JSON.parse(line.slice(6)) } as AgentEvent;
+          yield translateDeep({ type: eventType, data: JSON.parse(line.slice(6)) } as AgentEvent, locale);
         } catch {
           // A malformed frame is dropped; the stream continues.
         }

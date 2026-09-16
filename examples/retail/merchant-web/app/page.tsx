@@ -7,12 +7,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AssistantRail,
   Inspector,
+  LanguageSwitcher,
   type PortalNavItem,
   PortalShell,
   type Prefill,
   useMerchantChat,
+  useLocale,
   useResource,
   useSession,
+  t,
 } from "web-shared";
 import AssistantPanel from "@/components/AssistantPanel";
 import CatalogView from "@/components/views/CatalogView";
@@ -36,6 +39,8 @@ function StoreMark() {
 }
 
 export default function PortalPage() {
+  const { locale } = useLocale();
+  useEffect(() => { document.title = locale === "zh-CN" ? "ACME 商家工作台" : "ACME Merchant"; }, [locale]);
   const session = useSession(api);
   const [view, setView] = useState<PortalView>("home");
   const [assistantOpen, setAssistantOpen] = useState(false);
@@ -67,26 +72,27 @@ export default function PortalPage() {
   const nav = useMemo<PortalNavItem<PortalView>[]>(() => {
     const alerts = overview?.snapshot.alerts;
     return [
-      { id: "home", label: "Home", icon: "home" },
-      { id: "catalog", label: "Catalog", icon: "tag" },
-      { id: "orders", label: "Orders", icon: "inbox", attention: alerts?.order_issues || null },
+      { id: "home", label: t("Home"), icon: "home" },
+      { id: "catalog", label: t("Catalog"), icon: "tag" },
+      { id: "orders", label: t("Orders"), icon: "inbox", attention: alerts?.order_issues || null },
       {
         id: "inventory",
-        label: "Inventory",
+        label: t("Inventory"),
         icon: "box",
         count: alerts ? (alerts.low_stock ?? 0) + (alerts.slow_movers ?? 0) : null,
       },
     ];
-  }, [overview]);
+  }, [overview, locale]);
 
   return (
     <>
       <PortalShell
-        brand={{ mark: <StoreMark />, name: "ACME", detail: "Merchant workspace" }}
+        languageControl={<LanguageSwitcher className="lg:max-xl:flex-col" />}
+        brand={{ mark: <StoreMark />, name: "ACME", detail: t("Merchant workspace") }}
         nav={nav}
         view={view}
         onViewChange={setView}
-        operator={{ name: session.operator ?? "Operator", role: "Store manager" }}
+        operator={{ name: session.operator ?? t("Operator"), role: t("Store manager") }}
         assistantOpen={assistantOpen}
         assistantBusy={chat.busy}
         onToggleAssistant={() => setAssistantOpen((open) => !open)}
@@ -135,7 +141,7 @@ export default function PortalPage() {
           trace={chat.trace}
           memory={chat.memory}
           newMemoryKeys={chat.newMemoryKeys}
-          memoryTitle="Business memory"
+          memoryTitle={t("Business memory")}
           onClose={() => setActivityOpen(false)}
         />
       ) : null}

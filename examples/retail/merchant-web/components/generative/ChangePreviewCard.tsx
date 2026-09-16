@@ -8,6 +8,7 @@ import {
   type ChangeAction,
   ChangeStatusPill,
   coverLabel,
+  currentLocale,
   describeProposer,
   DiffRows,
   formatDate,
@@ -35,7 +36,7 @@ function RestockMath({ item }: { item: ChangeItem }) {
   const coverDays = item.after / perDay;
   return (
     <p className="mx-3.5 mt-2 text-[12.5px] tabular-nums text-(--ink-soft)">
-      +{added} units · sells <b className="font-semibold text-(--ink)">{perDay.toFixed(1)} a day</b> · {item.after} on hand ≈{" "}
+      {currentLocale() === "zh-CN" ? `新增 ${added} 件 · 日均售出 ` : `+${added} units · sells `}<b className="font-semibold text-(--ink)">{currentLocale() === "zh-CN" ? `${perDay.toFixed(1)} 件` : `${perDay.toFixed(1)} a day`}</b>{currentLocale() === "zh-CN" ? ` · 现有 ${item.after} 件 ≈ ` : ` · ${item.after} on hand ≈ `}
       <b className="font-semibold text-(--ink)">{coverLabel(coverDays)}</b>
     </p>
   );
@@ -81,7 +82,7 @@ export default function ChangePreviewCard({
 
       {change.margin_impact != null ? (
         <p className="mx-3.5 mt-2 text-[12.5px] tabular-nums text-(--ink-soft)">
-          Margin impact{" "}
+          {currentLocale() === "zh-CN" ? "利润影响 " : "Margin impact "}
           <b className={`font-semibold ${change.margin_impact < 0 ? "text-(--danger)" : "text-(--ok)"}`}>
             {change.margin_impact > 0 ? "+" : ""}
             {formatMoney(change.margin_impact, change.currency ?? undefined)}

@@ -35,6 +35,7 @@ from commerce_common.prompt_assembly import (
     build_request_messages,
     build_system_blocks,
     with_eager_input,
+    with_response_language,
     with_tool_cache_control,
 )
 from commerce_common.skills import SkillRegistry
@@ -140,8 +141,11 @@ class ShoppingAgent:
             now=session.local_now(),
             account=account,
             account_max_chars=self.config.max_context_chars,
+            response_language=session.response_language,
         )
-        system = build_system_blocks(self._static_system, context)
+        system = build_system_blocks(
+            with_response_language(self._static_system, session.response_language), context
+        )
         executor = self.executor_class(
             backend=self.backend,
             config=self.config,

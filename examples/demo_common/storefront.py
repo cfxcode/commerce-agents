@@ -59,6 +59,7 @@ class StartSessionRequest(BaseModel):
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=4000)
     page: PageContext | None = None
+    locale: str = Field(default="en", pattern=r"^(en|zh-CN)$")
 
 
 class CartAddRequest(BaseModel):
@@ -97,7 +98,7 @@ class StorefrontHost:
         self._cart_extras = cart_extras or (lambda record: {})
 
     def context(
-        self, record: StorefrontRecord, page: PageContext | None = None
+        self, record: StorefrontRecord, page: PageContext | None = None, locale: str = "en"
     ) -> ShoppingSessionContext:
         """The agent's view of a request: identity from the record, the clock from the
         host (a deployment passes the user's timezone instead)."""
@@ -106,6 +107,7 @@ class StorefrontHost:
             user_id=record.user_id,
             page=page or PageContext(),
             now=datetime.now(),
+            response_language="Simplified Chinese" if locale == "zh-CN" else "English",
         )
 
     def chat(self, request: ChatRequest, record: StorefrontRecord) -> StreamingResponse:
@@ -114,7 +116,7 @@ class StorefrontHost:
             self.agent,
             self.sessions,
             record,
-            self.context(record, request.page),
+            self.context(record, request.page, request.locale),
             env_hint=self._env_hint,
         )
 

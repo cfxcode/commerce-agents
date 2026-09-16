@@ -26,6 +26,34 @@ Chat needs `ANTHROPIC_API_KEY` in the repo-root `.env` or the environment; brows
 catalog and the portal's widgets do not. `MERCHANT_REQUIRE_HOST_APPROVAL=0` lets a chat
 approval apply a change; by default the preview card's button applies it.
 
+## 中文与 English
+
+The storefront, merchant portal, and both `/showcase` pages support Simplified Chinese
+and English. Use the `中文 / EN` control in the app chrome. The first visit follows the
+browser's language; the choice persists in a cookie and local storage. The cookie is
+shared across the localhost frontend ports. Switching languages keeps the current
+session and conversation, refreshes catalog/order/cart reads, and affects new replies.
+
+The UI dictionary is `examples/web-shared/locales/zh-CN.ts`; the retail fixture-content
+dictionary is `data/locales/zh-CN.json`. English fixtures remain the source of truth.
+Product descriptions, specs, reviews, policies, orders, merchant fixtures, and showcase
+content have Chinese display translations. Brands, people, ids, statuses used by code,
+and variant option values remain canonical; their display labels are localized separately.
+Locale formatting does not convert USD prices into CNY. User-authored content and existing
+conversation text remain in the language in which they were written.
+
+`POST /api/chat` and `POST /api/merchant/chat` accept `locale: "en" | "zh-CN"` (default
+`"en"`). The host supplies the corresponding response language in each turn's context,
+including the merchant analysis delegate. No additional model calls translate fixture data.
+
+Check fixture coverage and localization invariants with:
+
+```bash
+(cd examples && npm run check:i18n)
+COMMERCE_DEMO_AUTH=sdk pytest       # isolate tests from local .env gateway settings
+python scripts/smoke_retail_i18n.py # live Chinese shopping, language switching, merchant analysis
+```
+
 ## Try
 
 Storefront (`scripts/smoke_chat.py --vertical retail` runs the same three turns):

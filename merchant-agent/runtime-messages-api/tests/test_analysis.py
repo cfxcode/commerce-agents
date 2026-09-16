@@ -254,6 +254,27 @@ async def test_runner_fetches_computes_and_submits(sql_backend_cls, session, sta
     assert any(MERCHANT_FENCE.open in item["content"] for item in tool_results)
 
 
+@pytest.mark.parametrize("language", ["English", "Simplified Chinese"])
+async def test_analysis_respects_selected_language(sql_backend_cls, session, state, language):
+    config = analysis_config()
+    backend = sql_backend_cls(config)
+    session.response_language = language
+    client = FakeCreateClient(
+        [
+            create_response(tool_use_block("query_metrics", {"metric": "sales"}, "tu-1")),
+            create_response(tool_use_block(SUBMIT_ANALYSIS_TOOL, SUBMISSION, "tu-2")),
+        ]
+    )
+    runner = AnalysisRunner(client=client, backend=backend, config=config)
+    await runner.run(make_context(backend, config, session, state), {"question": "分析销售额"})
+    assert all(
+        call["system"][0]["text"].startswith(
+            f"# Reply language\nFor this turn, respond only in {language}."
+        )
+        for call in client.calls
+    )
+
+
 async def test_runner_adds_each_of_its_calls_to_the_turns_usage(sql_backend_cls, session, state):
     config = analysis_config()
     backend = sql_backend_cls(config)

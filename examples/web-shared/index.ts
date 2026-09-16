@@ -12,6 +12,8 @@ export { type Prefill } from "./Composer";
 export * from "./format";
 export { type GenerativeBlockProps, UnknownBlock } from "./generative";
 export { Icon, type IconName } from "./icons";
+export { currentLocale, t, translate, translateDeep, type Locale } from "./i18n-core";
+export { LanguageSwitcher, LocaleProvider, useLocale } from "./i18n";
 export { Inspector } from "./Inspector";
 export { AssistantPanel } from "./portal/AssistantPanel";
 export { AssistantRail } from "./portal/AssistantRail";

@@ -40,6 +40,21 @@ def build_system_blocks(static_text: str, context: str) -> list[dict[str, Any]]:
     ]
 
 
+def with_response_language(static_text: str, language: str | None) -> str:
+    """Keep the UI language in the first system block, including on compatible gateways.
+
+    This creates one cached prefix per language rather than changing it every turn.
+    """
+    if language is None:
+        return static_text
+    return (
+        f"# Reply language\nFor this turn, respond only in {language}. The selected interface "
+        "language takes priority over the language of the user's message and earlier replies. "
+        "Use it for reply text, suggestions, progress, and all presentation text fields. "
+        "Preserve canonical brands, ids, tool keys, and option values.\n\n" + static_text
+    )
+
+
 def with_eager_input(tools: list[dict[str, Any]], names: Collection[str]) -> list[dict[str, Any]]:
     """Ask the API to stream these tools' input as it is generated instead of one
     top-level value at a time, so a card's first item can render at its first key. The

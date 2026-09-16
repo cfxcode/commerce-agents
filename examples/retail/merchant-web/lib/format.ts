@@ -3,7 +3,7 @@
 
 /** Retail-specific labels on top of web-shared's formatters. */
 
-import { formatDayMonth, formatMoney, plural, type RecordRowData, titleCase } from "web-shared";
+import { formatDayMonth, formatMoney, plural, type RecordRowData, t, titleCase } from "web-shared";
 import { ORDER_STATUS } from "./kinds";
 import type { RecentOrder } from "./types";
 
@@ -22,7 +22,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export function formatCategoryLabel(slug: string): string {
-  return CATEGORY_LABELS[slug] ?? titleCase(slug.replaceAll("-", "_"));
+  return t(CATEGORY_LABELS[slug] ?? titleCase(slug.replaceAll("-", "_")));
 }
 
 export function orderRows(orders: RecentOrder[]): RecordRowData[] {

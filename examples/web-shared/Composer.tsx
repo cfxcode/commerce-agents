@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "./icons";
+import { t } from "./i18n";
 
 export interface Prefill {
   text: string;
@@ -83,13 +84,13 @@ export function Composer({
         }}
         rows={1}
         aria-label={label}
-        placeholder={busy ? "Working…" : placeholder}
+        placeholder={busy ? t("Working…") : placeholder}
         className={`max-h-40 min-w-0 flex-1 resize-none text-(--ink) outline-none transition placeholder:text-(--ink-soft)/70 ${VARIANTS[variant].input}`}
       />
       <button
         type="submit"
         disabled={busy || !ready || !draft.trim()}
-        aria-label="Send"
+        aria-label={t("Send")}
         className={`grid shrink-0 place-items-center bg-(--ink) text-(--surface) transition hover:brightness-110 disabled:opacity-35 ${VARIANTS[variant].button}`}
       >
         <Icon name="arrow-up" size={16} />

@@ -7,6 +7,7 @@
 
 import type { ReactNode } from "react";
 import { Icon } from "../icons";
+import { currentLocale, t } from "../i18n";
 import { IconButton } from "../ui";
 import { useStoreFrame } from "./frame";
 
@@ -43,7 +44,7 @@ export function BagPanel({
         >
           {count}
         </span>
-        <IconButton icon="x" label={`Close ${title.toLowerCase()}`} onClick={closePanel} className="ml-auto xl:hidden" />
+        <IconButton icon="x" label={currentLocale() === "zh-CN" ? `关闭${title}` : `Close ${title.toLowerCase()}`} onClick={closePanel} className="ml-auto xl:hidden" />
       </div>
       <div className="panel-scroll min-h-0 flex-1 overflow-y-auto px-[18px] py-3.5">
         {isEmpty ? (
@@ -109,7 +110,7 @@ export function Stepper({
         type="button"
         disabled={busy}
         onClick={() => onChange(quantity - 1)}
-        aria-label={unit ? `Fewer ${unit}s for ${itemTitle}` : `Decrease ${itemTitle} quantity`}
+        aria-label={currentLocale() === "zh-CN" ? `减少 ${itemTitle} 的数量` : unit ? `Fewer ${unit}s for ${itemTitle}` : `Decrease ${itemTitle} quantity`}
         className="px-2.5 py-0.5 text-sm text-(--ink-soft) hover:text-(--ink) disabled:opacity-40"
       >
         −
@@ -122,7 +123,7 @@ export function Stepper({
         type="button"
         disabled={busy}
         onClick={() => onChange(quantity + 1)}
-        aria-label={unit ? `More ${unit}s for ${itemTitle}` : `Increase ${itemTitle} quantity`}
+        aria-label={currentLocale() === "zh-CN" ? `增加 ${itemTitle} 的数量` : unit ? `More ${unit}s for ${itemTitle}` : `Increase ${itemTitle} quantity`}
         className="px-2.5 py-0.5 text-sm text-(--ink-soft) hover:text-(--ink) disabled:opacity-40"
       >
         +
@@ -138,10 +139,10 @@ export function RemoveLink({ itemTitle, onClick }: { itemTitle: string; onClick:
       type="button"
       disabled={busy}
       onClick={onClick}
-      aria-label={`Remove ${itemTitle}`}
+      aria-label={currentLocale() === "zh-CN" ? `移除 ${itemTitle}` : `Remove ${itemTitle}`}
       className="text-[12px] text-(--ink-soft) underline-offset-2 hover:text-(--danger) hover:underline disabled:opacity-40"
     >
-      Remove
+      {t("Remove")}
     </button>
   );
 }
@@ -157,17 +158,17 @@ export function CheckoutButton({ staged, disabled, prompt }: { staged: boolean; 
           const cards = document.querySelectorAll("[data-checkout-card]");
           const card = cards[cards.length - 1];
           if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
-          else ask("Show me the checkout summary again.");
+          else ask(currentLocale() === "zh-CN" ? "请再次显示结账摘要。" : "Show me the checkout summary again.");
         }}
         className="mt-3 w-full rounded-(--radius) border border-(--line-strong) bg-(--card) py-2.5 text-[14px] font-semibold text-(--ink) transition hover:border-(--accent)"
       >
-        View summary
+        {currentLocale() === "zh-CN" ? "查看摘要" : "View summary"}
       </button>
     );
   }
   return (
     <button type="button" onClick={() => ask(prompt)} disabled={disabled} className="btn-primary mt-3 w-full">
-      Check out
+      {t("Check out")}
     </button>
   );
 }

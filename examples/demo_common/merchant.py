@@ -99,6 +99,7 @@ class MerchantIdentity:
 
 class MerchantChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=4000)
+    locale: str = Field(default="en", pattern=r"^(en|zh-CN)$")
 
 
 class MerchantResetRequest(BaseModel):
@@ -127,12 +128,13 @@ def build_merchant_router(
     CurrentSession = session_dependency(sessions, "/api/merchant/session")
     router = APIRouter()
 
-    def context(record: MerchantRecord) -> MerchantSessionContext:
+    def context(record: MerchantRecord, locale: str = "en") -> MerchantSessionContext:
         return MerchantSessionContext(
             session_id=record.session_id,
             merchant_id=identity.merchant_id,
             operator=identity.operator,
             now=datetime.now(),
+            response_language="Simplified Chinese" if locale == "zh-CN" else "English",
         )
 
     @router.post("/session")
@@ -148,7 +150,11 @@ def build_merchant_router(
     async def chat(request: MerchantChatRequest, record: CurrentSession) -> StreamingResponse:
         append_user_turn(record, request.message, "Portal events")
         return stream_turn(
-            agent, sessions, record, context(record), env_hint=f"examples/{example_dir}/.env"
+            agent,
+            sessions,
+            record,
+            context(record, request.locale),
+            env_hint=f"examples/{example_dir}/.env",
         )
 
     @router.get("/overview")

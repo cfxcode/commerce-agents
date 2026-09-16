@@ -13,11 +13,23 @@ from merchant_agent import MerchantAgentConfig
 from shopping_agent import ShoppingAgentConfig
 
 
+def _model_settings() -> dict[str, str]:
+    """Allow local Anthropic-compatible gateways to override the demo models."""
+    model = os.environ.get("COMMERCE_MODEL")
+    if not model:
+        return {}
+    return {
+        "model": model,
+        "memory_model": os.environ.get("COMMERCE_MEMORY_MODEL", model),
+    }
+
+
 def build_shopping_config() -> ShoppingAgentConfig:
     return ShoppingAgentConfig(
         brand_name="ACME",
         assistant_name="ACME Assistant",
         brand_voice="professional, warm, and brief",
+        **_model_settings(),
     )
 
 
@@ -33,4 +45,5 @@ def build_merchant_config(store_name: str) -> MerchantAgentConfig:
         enable_analysis=True,
         analysis_use_code_execution=os.environ.get("MERCHANT_ANALYSIS_CODE_EXECUTION", "0") == "1",
         analysis_model=os.environ.get("MERCHANT_ANALYSIS_MODEL") or None,
+        **_model_settings(),
     )

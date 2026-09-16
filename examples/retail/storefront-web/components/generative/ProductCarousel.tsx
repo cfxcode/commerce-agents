@@ -4,7 +4,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { formatMoney, optionValuesLabel, priceLabel, useStoreFrame } from "web-shared";
+import { currentLocale, formatMoney, formatNumber, humanizeField, optionValuesLabel, priceLabel, t, useStoreFrame } from "web-shared";
 import { fetchProduct } from "@/lib/api";
 import type { PriceIntelligence, Product, ProductDetails, ProductsPayload, ReviewAspects } from "@/lib/types";
 import ProductTile, { AddButton, DeliveryPromise, OptionLine, ProductImage, Rating } from "../ProductTile";
@@ -44,12 +44,12 @@ function PriceIntelligenceRow({ intel }: { intel: PriceIntelligence }) {
       <div className="min-w-0">
         <div className="text-[13px] font-semibold text-(--ink)">{intel.verdict}</div>
         <div className="text-[11px] text-(--ink-soft)">
-          {intel.position === "low"
+          {t(intel.position === "low"
             ? "Sitting near the low end of its own range"
             : intel.position === "high"
               ? "Sitting near the high end of its own range"
-              : "Sitting in the typical band of its own range"}
-          {" "}· last {intel.days} days
+              : "Sitting in the typical band of its own range")}
+          {currentLocale() === "zh-CN" ? ` · 最近 ${intel.days} 天` : ` · last ${intel.days} days`}
         </div>
       </div>
     </div>
@@ -60,14 +60,14 @@ function ReviewAspectsRow({ synthesis }: { synthesis: ReviewAspects }) {
   return (
     <div data-review-aspects className="mt-2">
       <div className="text-[11px] font-semibold uppercase tracking-wide text-(--ink-soft)">
-        From {synthesis.review_count.toLocaleString()} customer reviews
+        {currentLocale() === "zh-CN" ? `来自 ${formatNumber(synthesis.review_count)} 条顾客评价` : `From ${formatNumber(synthesis.review_count)} customer reviews`}
       </div>
       <div className="mt-1.5 flex flex-wrap gap-1.5">
         {synthesis.aspects.map((aspect) => (
           <div
             key={aspect.name}
             className="rounded-lg border border-(--line) bg-(--card) px-2 py-1"
-            title={`${aspect.name}: ${aspect.positive_pct}% positive across ${aspect.mentions.toLocaleString()} mentions`}
+            title={currentLocale() === "zh-CN" ? `${aspect.name}：${formatNumber(aspect.mentions)} 条提及中 ${aspect.positive_pct}% 为正面评价` : `${aspect.name}: ${aspect.positive_pct}% positive across ${formatNumber(aspect.mentions)} mentions`}
           >
             <div className="flex items-baseline gap-1.5 text-[13px]">
               <span className="font-medium text-(--ink)">{aspect.name}</span>
@@ -79,7 +79,7 @@ function ReviewAspectsRow({ synthesis }: { synthesis: ReviewAspects }) {
                 {aspect.positive_pct}%
               </span>
               <span className="text-[11px] text-(--ink-soft)">
-                {aspect.mentions.toLocaleString()} mentions
+                {formatNumber(aspect.mentions)} {t("mentions")}
               </span>
             </div>
             <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-(--well)">
@@ -102,7 +102,7 @@ function VariantList({ family, variants }: { family: Product; variants: Product[
   const { ask } = useStoreFrame();
   const pricesDiffer = variants.some((variant) => variant.price !== variants[0]?.price);
   return (
-    <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Options">
+    <ul className="mt-2 flex flex-wrap gap-1.5" aria-label={t("Options")}>
       {variants.map((variant) => {
         const label = optionValuesLabel(variant);
         const available = variant.in_stock !== false;
@@ -111,7 +111,7 @@ function VariantList({ family, variants }: { family: Product; variants: Product[
             <button
               type="button"
               disabled={!available}
-              onClick={() => ask(`Add the ${family.title} in ${label} (${variant.product_id}) to my cart.`)}
+              onClick={() => ask(currentLocale() === "zh-CN" ? `将 ${label} 的 ${family.title}（${variant.product_id}）加入购物车。` : `Add the ${family.title} in ${label} (${variant.product_id}) to my cart.`)}
               className="rounded-full border border-(--line) bg-(--card) px-2.5 py-1 text-[12px] text-(--ink) transition-colors hover:border-(--ink) disabled:cursor-not-allowed disabled:text-(--ink-soft)/70 disabled:line-through"
             >
               {label}
@@ -168,7 +168,7 @@ function ProductDetail({
                 <Rating rating={full.rating} count={full.review_count} />
                 {full.in_stock === false ? (
                   <span className="rounded-full bg-(--ink)/85 px-2 py-0.5 text-[11px] font-medium text-(--surface)">
-                    Out of stock
+                    {t("Out of stock")}
                   </span>
                 ) : null}
               </div>
@@ -176,7 +176,7 @@ function ProductDetail({
             </div>
             <button
               onClick={onClose}
-              aria-label="Collapse details"
+              aria-label={t("Collapse details")}
               className="shrink-0 rounded-md px-1.5 text-base leading-none text-(--ink-soft) hover:text-(--ink)"
             >
               ×
@@ -189,7 +189,7 @@ function ProductDetail({
         <p className="mt-2 text-[13px] leading-snug text-(--ink)">{reason}</p>
       ) : null}
       {details === null ? (
-        <p className="mt-2 animate-pulse text-[13px] text-(--ink-soft)">Loading details…</p>
+        <p className="mt-2 animate-pulse text-[13px] text-(--ink-soft)">{t("Loading details…")}</p>
       ) : (
         <div className="ac-reveal">
           {details.price_intelligence ? (
@@ -209,7 +209,7 @@ function ProductDetail({
               {Object.entries(specs).map(([key, value]) => (
                 <div key={key} className="text-[13px]">
                   <dt className="font-semibold capitalize text-(--ink-soft)">
-                    {key.replaceAll("_", " ")}
+                    {humanizeField(key)}
                   </dt>
                   <dd className="text-(--ink)">{value}</dd>
                 </div>
@@ -325,7 +325,7 @@ export default function ProductCarousel({
             />
             <button
               onClick={() => nudge(-1)}
-              aria-label="Scroll to previous products"
+              aria-label={t("Scroll to previous products")}
               className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full border border-(--line) bg-(--card) px-2 py-1 text-sm text-(--ink) shadow-md transition hover:border-(--accent)"
             >
               ‹
@@ -340,7 +340,7 @@ export default function ProductCarousel({
             />
             <button
               onClick={() => nudge(1)}
-              aria-label="Scroll to more products"
+              aria-label={t("Scroll to more products")}
               className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full border border-(--line) bg-(--card) px-2 py-1 text-sm text-(--ink) shadow-md transition hover:border-(--accent)"
             >
               ›

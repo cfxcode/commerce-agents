@@ -1,7 +1,7 @@
 // Copyright 2026 Anthropic PBC
 // SPDX-License-Identifier: Apache-2.0
 
-import { CHANGE_STATUS, DigestList, DigestRow, formatMoney, formatNumber, GenCard, GenCardHeader, type IconName, plural, type Tone } from "web-shared";
+import { CHANGE_STATUS, currentLocale, DigestList, DigestRow, formatMoney, formatNumber, GenCard, GenCardHeader, type IconName, plural, t, type Tone } from "web-shared";
 import { INVENTORY_KINDS } from "@/lib/kinds";
 import type { DigestEntry, DigestPayload } from "@/lib/types";
 
@@ -16,6 +16,13 @@ const KINDS: Record<DigestEntry["kind"], { icon: IconName; tone: Tone }> = {
 /** Pending changes get no chip; approval stays on the change card. */
 function triagePrompt(item: DigestEntry): { label: string; prompt: string } | null {
   const listingRef = item.listing ? `${item.listing.title} (${item.listing.listing_id})` : item.ref_id;
+  if (currentLocale() === "zh-CN") {
+    if (item.kind === "low_stock") return listingRef ? { label: "起草补货", prompt: `为 ${listingRef} 起草补货方案。` } : null;
+    if (item.kind === "slow_mover") return listingRef ? { label: "计划降价", prompt: `为 ${listingRef} 制定降价方案。` } : null;
+    if (item.kind === "order_issue") return { label: "起草回复", prompt: `帮我处理订单 ${item.ref_id ?? ""}：${item.headline}` };
+    if (item.kind === "metric") return { label: "询问原因", prompt: `是什么导致了这个变化：${item.headline}？` };
+    return null;
+  }
   switch (item.kind) {
     case "low_stock":
       return listingRef ? { label: "Draft restock", prompt: `Draft a restock plan for ${listingRef}.` } : null;
@@ -37,14 +44,14 @@ function context(item: DigestEntry) {
   if (item.listing) {
     return (
       <span>
-        {item.listing.listing_id} · {item.listing.stock === 0 ? "sold out" : `${formatNumber(item.listing.stock)} in stock`} · {formatMoney(item.listing.price)}
+        {item.listing.listing_id} · {item.listing.stock === 0 ? t("sold out") : currentLocale() === "zh-CN" ? `库存 ${formatNumber(item.listing.stock)} 件` : `${formatNumber(item.listing.stock)} in stock`} · {formatMoney(item.listing.price)}
       </span>
     );
   }
   if (item.change) {
     return (
       <span>
-        {item.change.change_id} · {CHANGE_STATUS[item.change.status].label.toLowerCase()}
+        {item.change.change_id} · {t(CHANGE_STATUS[item.change.status].label)}
       </span>
     );
   }

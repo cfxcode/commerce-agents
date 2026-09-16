@@ -5,6 +5,7 @@
 
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import type { MemoryFact, TraceEntry } from "./protocol";
+import { currentLocale, t } from "./i18n";
 
 interface ToolRow {
   tool: string;
@@ -75,11 +76,11 @@ function rowStatus(row: ToolRow): RowStatus {
 function trailing(row: ToolRow, status: RowStatus): string {
   switch (status) {
     case "running":
-      return "running…";
+      return currentLocale() === "zh-CN" ? "运行中…" : "running…";
     case "blocked":
-      return `held · ${GATE_LABELS[row.reason ?? ""] ?? "safety gate"}`;
+      return currentLocale() === "zh-CN" ? `已拦截 · ${t(GATE_LABELS[row.reason ?? ""] ?? "safety gate")}` : `held · ${GATE_LABELS[row.reason ?? ""] ?? "safety gate"}`;
     case "error":
-      return "error";
+      return currentLocale() === "zh-CN" ? "错误" : "error";
     default:
       // The in-process mock backends answer in under a millisecond.
       return row.durationMs != null && row.durationMs < 1 ? "<1 ms" : `${Math.round(row.durationMs ?? 0)} ms`;
@@ -100,7 +101,7 @@ function ToolCallRow({ row }: { row: ToolRow }) {
         <span className={`w-3.5 shrink-0 text-center text-[12px] leading-none ${TONE[status]}`} aria-hidden>
           {GLYPH[status]}
         </span>
-        {status === "ok" ? <span className="sr-only">ok</span> : null}
+        {status === "ok" ? <span className="sr-only">{currentLocale() === "zh-CN" ? "完成" : "ok"}</span> : null}
         <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-(--ink)">{row.tool}</span>
         <span className={`ml-auto shrink-0 text-right font-mono text-[11px] tabular-nums ${TONE[status]}`}>
           {trailing(row, status)}
@@ -108,11 +109,11 @@ function ToolCallRow({ row }: { row: ToolRow }) {
       </button>
       {open ? (
         <div className="mb-2 ml-5 space-y-2">
-          {row.input ? <Detail label="Input" tone="bg-(--well)/70 text-(--ink)" text={row.input} /> : null}
+          {row.input ? <Detail label={t("Input")} tone="bg-(--well)/70 text-(--ink)" text={row.input} /> : null}
           {row.excerpt !== undefined ? (
-            <Detail label="Result (excerpt)" tone={RESULT_TONE[status]} text={row.excerpt || "(empty)"} />
+            <Detail label={t("Result (excerpt)")} tone={RESULT_TONE[status]} text={row.excerpt || t("(empty)")} />
           ) : row.result !== undefined ? (
-            <Detail label="Result" tone={RESULT_TONE[status]} text={row.result || "(empty)"} />
+            <Detail label={t("Result")} tone={RESULT_TONE[status]} text={row.result || t("(empty)")} />
           ) : null}
         </div>
       ) : null}
@@ -186,11 +187,11 @@ export function Inspector({
         <div className="flex items-start justify-between gap-3 border-b border-(--line) px-4 py-3">
           <div className="flex min-w-0 items-start gap-2">
             {turnCount > 1 ? (
-              <span className="flex shrink-0 items-center gap-0.5" role="group" aria-label="Reply">
-                <button type="button" onClick={() => stepTo(turn - 1)} disabled={turn <= 1} aria-label="Previous reply" className={stepButton}>
+              <span className="flex shrink-0 items-center gap-0.5" role="group" aria-label={t("Reply")}>
+                <button type="button" onClick={() => stepTo(turn - 1)} disabled={turn <= 1} aria-label={t("Previous reply")} className={stepButton}>
                   ‹
                 </button>
-                <button type="button" onClick={() => stepTo(turn + 1)} disabled={turn >= turnCount} aria-label="Next reply" className={stepButton}>
+                <button type="button" onClick={() => stepTo(turn + 1)} disabled={turn >= turnCount} aria-label={t("Next reply")} className={stepButton}>
                   ›
                 </button>
               </span>
@@ -198,19 +199,19 @@ export function Inspector({
             <div className="min-w-0">
               <h2 className="flex flex-wrap items-baseline gap-x-1.5 text-sm text-(--ink)">
                 {turnCount === 0 ? (
-                  <span className="font-bold">Activity</span>
+                  <span className="font-bold">{t("Activity")}</span>
                 ) : (
                   <>
                     <span className="font-bold">
-                      Reply {turn}
-                      {turnCount > 1 ? <span className="font-normal text-(--ink-soft)"> of {turnCount}</span> : null}
+                      {currentLocale() === "zh-CN" ? `回复 ${turn}` : `Reply ${turn}`}
+                      {turnCount > 1 ? <span className="font-normal text-(--ink-soft)">{currentLocale() === "zh-CN" ? ` / ${turnCount}` : ` of ${turnCount}`}</span> : null}
                     </span>
                     <span className="font-normal text-(--ink-soft)">
                       {working ? (
-                        <span className="animate-pulse">· working…</span>
+                        <span className="animate-pulse">· {t("Working…")}</span>
                       ) : (
                         <>
-                          · {rows.length} step{rows.length === 1 ? "" : "s"}
+                          · {currentLocale() === "zh-CN" ? `${rows.length} 个步骤` : `${rows.length} step${rows.length === 1 ? "" : "s"}`}
                           {done?.elapsedMs && done.elapsedMs >= 100 ? ` · ${(done.elapsedMs / 1000).toFixed(1)}s` : ""}
                         </>
                       )}
@@ -226,7 +227,7 @@ export function Inspector({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close activity"
+            aria-label={t("Close activity")}
             className="rounded-md px-2 py-0.5 text-lg leading-none text-(--ink-soft) hover:text-(--ink)"
           >
             ×
@@ -235,11 +236,11 @@ export function Inspector({
 
         <div className="panel-scroll flex-1 overflow-y-auto px-4 py-3">
           <section>
-            <Heading>Steps</Heading>
+            <Heading>{t("Steps")}</Heading>
             {turnCount === 0 ? (
-              <Empty>No replies yet.</Empty>
+              <Empty>{t("No replies yet.")}</Empty>
             ) : rows.length === 0 ? (
-              <Empty>{working ? "Working…" : "No tool calls this reply."}</Empty>
+              <Empty>{working ? t("Working…") : t("No tool calls this reply.")}</Empty>
             ) : (
               <ul className="mt-1 divide-y divide-(--line)">
                 {rows.map((row, index) => (
@@ -252,16 +253,16 @@ export function Inspector({
           <section className="mt-5 border-t border-(--line) pt-4">
             <Heading>
               {memoryTitle}
-              {newCount ? <span className="font-normal text-(--ink-soft)"> · {newCount} new this session</span> : null}
+              {newCount ? <span className="font-normal text-(--ink-soft)"> · {currentLocale() === "zh-CN" ? `本次会话新增 ${newCount} 条` : `${newCount} new this session`}</span> : null}
             </Heading>
             {memory.length === 0 ? (
-              <Empty>Nothing saved yet.</Empty>
+              <Empty>{t("Nothing saved yet.")}</Empty>
             ) : (
               <ul className="mt-1 space-y-1">
                 {memory.map((fact) => (
                   <li key={fact.key} className="text-[13px] leading-snug text-(--ink)">
                     {fact.value}
-                    {newMemoryKeys.has(fact.key) ? <em className="ml-1.5 text-(--ink-soft)">new</em> : null}
+                    {newMemoryKeys.has(fact.key) ? <em className="ml-1.5 text-(--ink-soft)">{currentLocale() === "zh-CN" ? "新增" : "new"}</em> : null}
                   </li>
                 ))}
               </ul>

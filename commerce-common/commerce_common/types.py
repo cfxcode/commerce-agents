@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import TypeVar
+from typing import Literal, TypeVar
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, Field, field_validator
@@ -49,10 +49,12 @@ class MemoryFact(BaseModel):
 class ClockContext(BaseModel):
     """The host-supplied clock a session context carries: an IANA ``timezone``, or an
     explicit ``now`` that overrides it. With neither set the prompt carries no local time,
-    because the server's clock is not the user's."""
+    because the server's clock is not the user's. ``response_language`` is an optional
+    host-selected interface preference shared by both roles."""
 
     timezone: str | None = None
     now: datetime | None = None
+    response_language: Literal["English", "Simplified Chinese"] | None = None
 
     @field_validator("timezone")
     @classmethod

@@ -4,7 +4,7 @@
 "use client";
 
 import { useState } from "react";
-import { hasOptions, optionSummary, optionValuesLabel, priceLabel, useStoreFrame } from "web-shared";
+import { currentLocale, formatNumber, hasOptions, optionSummary, optionValuesLabel, priceLabel, t, useStoreFrame } from "web-shared";
 import type { Product } from "@/lib/types";
 import { flyToCart } from "@/lib/flight";
 import { attributeChips, productGlyph, productTileClass } from "@/lib/format";
@@ -12,6 +12,7 @@ import { STORE_POLICY } from "@/lib/storePolicy";
 
 /** A trailing parenthetical such as "(48-Pack)" is kept unbreakable so the clamp cuts before it. */
 export function ProductTitle({ title, className = "" }: { title: string; className?: string }) {
+  title = t(title);
   const match = /^(.*\S)\s+(\([^()]+\))$/.exec(title);
   return (
     <div className={className} title={title}>
@@ -29,7 +30,7 @@ export function ProductTitle({ title, className = "" }: { title: string; classNa
 function ReturnsPromise({ className = "" }: { className?: string }) {
   return (
     <div className={`text-[11px] text-(--ink-soft) ${className}`}>
-      {STORE_POLICY.returnsShort}
+      {t(STORE_POLICY.returnsShort)}
     </div>
   );
 }
@@ -72,7 +73,7 @@ function LowStockChip({ product, className = "" }: { product: Product; className
     <span
       className={`whitespace-nowrap rounded-full bg-(--warn-soft) px-2 py-0.5 text-[11px] font-semibold text-(--warn) ${className}`}
     >
-      Only {count} left
+      {currentLocale() === "zh-CN" ? `仅剩 ${count} 件` : `Only ${count} left`}
     </span>
   );
 }
@@ -84,7 +85,7 @@ export function Rating({ rating, count }: { rating?: number | null; count?: numb
     <span className="whitespace-nowrap text-[13px] text-(--ink-soft)">
       <span className="text-(--star)">★</span> {rating.toFixed(1)}
       {count ? (
-        <span className="text-[11px] text-(--ink-soft)/80"> ({count.toLocaleString()})</span>
+        <span className="text-[11px] text-(--ink-soft)/80"> ({formatNumber(count)})</span>
       ) : null}
     </span>
   );
@@ -121,9 +122,9 @@ export function AddButton({
         type="button"
         onClick={(event) => {
           event.stopPropagation();
-          ask(`Add the ${product.title} (${product.product_id}) to my cart.`);
+          ask(currentLocale() === "zh-CN" ? `将 ${product.title}（${product.product_id}）加入购物车。` : `Add the ${product.title} (${product.product_id}) to my cart.`);
         }}
-        aria-label={`Choose options for ${product.title}`}
+        aria-label={currentLocale() === "zh-CN" ? `为 ${product.title} 选择选项` : `Choose options for ${product.title}`}
         className="pointer-events-auto absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-(--ink) text-lg font-semibold leading-none text-(--surface) shadow-(--shadow-sm) transition-all hover:scale-105"
       >
         +
@@ -144,7 +145,7 @@ export function AddButton({
         if (added) flyToCart(product, source);
         window.setTimeout(() => setPhase("idle"), added ? 1200 : 1600);
       }}
-      aria-label={`Add ${product.title} to cart`}
+      aria-label={currentLocale() === "zh-CN" ? `将 ${product.title} 加入购物车` : `Add ${product.title} to cart`}
       className={`pointer-events-auto absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full text-lg font-semibold leading-none text-(--surface) shadow-(--shadow-sm) transition-all hover:scale-105 ${
         phase === "done" ? "bg-(--ok)" : phase === "error" ? "bg-(--warn)" : "bg-(--ink)"
       } ${phase === "busy" ? "animate-pulse" : ""}`}
@@ -192,7 +193,7 @@ export default function ProductTile({
           <ProductImage product={product} className={`w-full ${imageHeight}`} />
           {product.in_stock === false ? (
             <span className="absolute right-1.5 top-1.5 rounded-full bg-(--ink)/85 px-2 py-0.5 text-[11px] font-medium text-(--surface)">
-              Out of stock
+              {t("Out of stock")}
             </span>
           ) : (
             <LowStockChip product={product} className="absolute right-1.5 top-1.5" />

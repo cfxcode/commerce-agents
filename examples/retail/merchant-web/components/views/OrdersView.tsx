@@ -3,7 +3,7 @@
 
 "use client";
 
-import { AttentionList, AttentionRow, formatDayMonth, Notice, PageHeader, Panel, plural, QuotedAsData, RecordList, Skeleton, useResource } from "web-shared";
+import { AttentionList, AttentionRow, currentLocale, formatDayMonth, Notice, PageHeader, Panel, plural, QuotedAsData, RecordList, Skeleton, t, useResource } from "web-shared";
 import { fetchAlerts } from "@/lib/api";
 import { orderRows } from "@/lib/format";
 import { ISSUE_KINDS } from "@/lib/kinds";
@@ -16,19 +16,19 @@ function IssueRow({ issue, onAskAssistant }: { issue: OrderIssue; onAskAssistant
       icon={style.icon}
       tone={style.tone}
       title={issue.summary}
-      meta={[style.label, `Order ${issue.order_id}`, issue.listing_id ?? "", issue.opened_at ? `opened ${formatDayMonth(issue.opened_at)}` : ""].filter(Boolean).join(" · ")}
+      meta={[t(style.label), currentLocale() === "zh-CN" ? `订单 ${issue.order_id}` : `Order ${issue.order_id}`, issue.listing_id ?? "", issue.opened_at ? (currentLocale() === "zh-CN" ? `${formatDayMonth(issue.opened_at)} 开启` : `opened ${formatDayMonth(issue.opened_at)}`) : ""].filter(Boolean).join(" · ")}
       note={
         issue.buyer_message_excerpt ? (
           <div className="mt-1 rounded-[10px] bg-(--ground) px-3 py-2">
             <blockquote className="text-[13px] leading-snug text-(--ink-2)">&ldquo;{issue.buyer_message_excerpt}&rdquo;</blockquote>
             {/* Some fixture excerpts are injection attempts, so the note sits beside the quote. */}
-            <QuotedAsData subject="Buyer message" className="mt-1.5" />
+            <QuotedAsData subject={currentLocale() === "zh-CN" ? "买家消息" : "Buyer message"} className="mt-1.5" />
           </div>
         ) : null
       }
       action={{
-        label: issue.kind === "buyer_message" ? "Draft reply" : "Ask",
-        onClick: () => onAskAssistant(`What are my options for order ${issue.order_id}? ${issue.summary}.`),
+        label: currentLocale() === "zh-CN" ? (issue.kind === "buyer_message" ? "起草回复" : "询问") : (issue.kind === "buyer_message" ? "Draft reply" : "Ask"),
+        onClick: () => onAskAssistant(currentLocale() === "zh-CN" ? `订单 ${issue.order_id} 有哪些处理选项？${issue.summary}。` : `What are my options for order ${issue.order_id}? ${issue.summary}.`),
       }}
     />
   );
@@ -48,9 +48,9 @@ export default function OrdersView({
 
   return (
     <div className="ac-reveal flex flex-col gap-4">
-      <PageHeader title="Orders" subtitle={data ? (issues.length ? plural(issues.length, "open issue") : "No open issues") : undefined} />
+      <PageHeader title={t("Orders")} subtitle={data ? (currentLocale() === "zh-CN" ? (issues.length ? `${issues.length} 个未解决问题` : "没有未解决问题") : (issues.length ? plural(issues.length, "open issue") : "No open issues")) : undefined} />
       {failed && !data ? (
-        <Notice>The merchant API isn&apos;t reachable, so order issues can&apos;t load.</Notice>
+        <Notice>{currentLocale() === "zh-CN" ? "无法连接商家 API，因此无法加载订单问题。" : "The merchant API isn't reachable, so order issues can't load."}</Notice>
       ) : !data ? (
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
           <Skeleton className="h-96" />
@@ -58,9 +58,9 @@ export default function OrdersView({
         </div>
       ) : (
         <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <Panel title="Open issues" subtitle={issues.length ? String(issues.length) : undefined}>
+          <Panel title={currentLocale() === "zh-CN" ? "未解决问题" : "Open issues"} subtitle={issues.length ? String(issues.length) : undefined}>
             {issues.length === 0 ? (
-              <p className="px-[18px] pb-4 text-[13.5px] text-(--ink-soft)">No open order issues.</p>
+              <p className="px-[18px] pb-4 text-[13.5px] text-(--ink-soft)">{currentLocale() === "zh-CN" ? "没有未解决的订单问题。" : "No open order issues."}</p>
             ) : (
               <AttentionList>
                 {issues.map((issue) => (
@@ -69,11 +69,11 @@ export default function OrdersView({
               </AttentionList>
             )}
           </Panel>
-          <Panel title="Recent orders">
+          <Panel title={t("Recent orders")}>
             {!recentOrders ? (
               <Skeleton className="mx-[18px] mb-4 h-40" />
             ) : recentOrders.length === 0 ? (
-              <p className="px-[18px] pb-4 text-[13px] text-(--ink-soft)">No recent orders to show.</p>
+              <p className="px-[18px] pb-4 text-[13px] text-(--ink-soft)">{currentLocale() === "zh-CN" ? "没有可显示的最近订单。" : "No recent orders to show."}</p>
             ) : (
               <RecordList rows={orderRows(recentOrders)} />
             )}

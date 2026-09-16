@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { CSSProperties } from "react";
-import { formatMoney } from "web-shared";
+import { currentLocale, formatMoney, t } from "web-shared";
 import type { ComparisonPayload } from "@/lib/types";
 import { ProductImage, ProductTitle, Rating } from "../ProductTile";
 
@@ -55,7 +55,7 @@ export default function ComparisonGrid({
                 <div className="min-w-0">
                   {recommended ? (
                     <div className="text-[11px] font-bold uppercase tracking-wide text-(--ink)">
-                      {RECOMMENDED_LABEL}
+                      {currentLocale() === "zh-CN" ? "推荐" : RECOMMENDED_LABEL}
                     </div>
                   ) : null}
                   <ProductTitle
@@ -71,7 +71,7 @@ export default function ComparisonGrid({
               <div>
                 {entry.best_for ? (
                   <div className="rounded-md bg-(--well) px-2 py-1 text-[13px] text-(--ink)">
-                    Best for: {entry.best_for}
+                    {currentLocale() === "zh-CN" ? "最适合：" : "Best for: "}{entry.best_for}
                   </div>
                 ) : null}
               </div>
@@ -97,7 +97,7 @@ export default function ComparisonGrid({
       </div>
       {delta ? (
         <p className="mt-3 text-[13px] text-(--ink)">
-          Price difference:{" "}
+          {currentLocale() === "zh-CN" ? "价差：" : "Price difference: "}
           <span className="font-semibold">{formatMoney(delta.amount)}</span>{" "}
           <span className="text-(--ink-soft)">
             ({formatMoney(delta.low_price)} vs {formatMoney(delta.high_price)})
@@ -105,7 +105,7 @@ export default function ComparisonGrid({
         </p>
       ) : null}
       {payload.dimensions?.length ? (
-        <p className="mt-3 text-xs text-(--ink-soft)/80">Compared on: {payload.dimensions.join(" · ")}</p>
+        <p className="mt-3 text-xs text-(--ink-soft)/80">{currentLocale() === "zh-CN" ? "比较维度：" : "Compared on: "}{payload.dimensions.join(" · ")}</p>
       ) : null}
     </section>
   );

@@ -10,6 +10,7 @@ import {
   AttentionList,
   AttentionRow,
   coverLabel,
+  currentLocale,
   formatChangePct,
   formatComparisonLabel,
   formatDayMonth,
@@ -34,6 +35,7 @@ import {
   Skeleton,
   StatStrip,
   StatTile,
+  t,
   ViewLink,
 } from "web-shared";
 import { orderRows } from "@/lib/format";
@@ -51,12 +53,12 @@ function briefing(data: OverviewResponse): string {
   const parts: string[] = [];
   if (snapshot.sales_change_pct != null) {
     const direction = snapshot.sales_change_pct >= 0 ? "up" : "down";
-    parts.push(`Sales are ${direction} ${formatChangePct(Math.abs(snapshot.sales_change_pct)).replace("+", "")} on the week.`);
+    parts.push(currentLocale() === "zh-CN" ? `本周销售额${direction === "up" ? "上升" : "下降"} ${formatChangePct(Math.abs(snapshot.sales_change_pct)).replace("+", "")}。` : `Sales are ${direction} ${formatChangePct(Math.abs(snapshot.sales_change_pct)).replace("+", "")} on the week.`);
   }
   const orders = needs_attention.order_issues.length;
   const listings = needs_attention.inventory.length;
   const needs = [orders ? plural(orders, "order") : "", listings ? plural(listings, "listing") : ""].filter(Boolean);
-  parts.push(needs.length ? `${needs.join(" and ")} need you today.` : "Nothing needs you today.");
+  parts.push(currentLocale() === "zh-CN" ? (orders || listings ? `今天有 ${orders} 个订单和 ${listings} 个商品需要关注。` : "今天没有需要处理的事项。") : (needs.length ? `${needs.join(" and ")} need you today.` : "Nothing needs you today."));
   return parts.join(" ");
 }
 
@@ -86,10 +88,10 @@ function IssueRow({ issue, onAskAssistant }: { issue: OrderIssue; onAskAssistant
       icon={style.icon}
       tone={style.tone}
       title={issue.summary}
-      meta={[style.label, `Order ${issue.order_id}`, issue.opened_at ? `opened ${formatDayMonth(issue.opened_at)}` : ""].filter(Boolean).join(" · ")}
+      meta={[t(style.label), currentLocale() === "zh-CN" ? `订单 ${issue.order_id}` : `Order ${issue.order_id}`, issue.opened_at ? (currentLocale() === "zh-CN" ? `${formatDayMonth(issue.opened_at)} 开启` : `opened ${formatDayMonth(issue.opened_at)}`) : ""].filter(Boolean).join(" · ")}
       action={{
-        label: issue.kind === "buyer_message" ? "Draft reply" : "Ask",
-        onClick: () => onAskAssistant(`What are my options for order ${issue.order_id}? ${issue.summary}.`),
+        label: currentLocale() === "zh-CN" ? (issue.kind === "buyer_message" ? "起草回复" : "询问") : (issue.kind === "buyer_message" ? "Draft reply" : "Ask"),
+        onClick: () => onAskAssistant(currentLocale() === "zh-CN" ? `订单 ${issue.order_id} 有哪些处理选项？${issue.summary}。` : `What are my options for order ${issue.order_id}? ${issue.summary}.`),
       }}
     />
   );
@@ -110,14 +112,14 @@ function InventoryRow({ alert, onAskAssistant }: { alert: InventoryAlert; onAskA
       meta={
         <>
           <span className={soldOut ? "font-semibold text-(--danger)" : low ? "font-semibold text-(--warn)" : ""}>
-            {soldOut ? "Sold out" : `${formatNumber(alert.stock)} in stock`}
+            {soldOut ? t("Sold out") : currentLocale() === "zh-CN" ? `库存 ${formatNumber(alert.stock)} 件` : `${formatNumber(alert.stock)} in stock`}
           </span>
           {[
             "",
             alert.days_of_cover != null && !soldOut ? coverLabel(alert.days_of_cover) : "",
-            alert.sales_last_30d != null ? `${formatNumber(alert.sales_last_30d)} sold in 30 days` : "",
+            alert.sales_last_30d != null ? (currentLocale() === "zh-CN" ? `30 天售出 ${formatNumber(alert.sales_last_30d)} 件` : `${formatNumber(alert.sales_last_30d)} sold in 30 days`) : "",
             alert.listing_id,
-            soldOut && alert.storefront_visible === false ? "hidden from the storefront" : "",
+            soldOut && alert.storefront_visible === false ? (currentLocale() === "zh-CN" ? "已从商城隐藏" : "hidden from the storefront") : "",
           ]
             .filter((part, index) => index === 0 || part)
             .join(" · ")}
@@ -127,13 +129,13 @@ function InventoryRow({ alert, onAskAssistant }: { alert: InventoryAlert; onAskA
         // A paused listing still alerts here but shows no chip to shoppers.
         low && alert.stock > 0 && alert.storefront_visible ? (
           <Pill tone="warn" dot>
-            Storefront shows “Only {formatNumber(alert.stock)} left”
+            {currentLocale() === "zh-CN" ? `商城显示“仅剩 ${formatNumber(alert.stock)} 件”` : `Storefront shows “Only ${formatNumber(alert.stock)} left”`}
           </Pill>
         ) : null
       }
       action={{
-        label: low ? "Draft restock" : "Plan markdown",
-        onClick: () => onAskAssistant(low ? `Draft a restock plan for ${ref}.` : `Plan a markdown for ${ref}.`),
+        label: currentLocale() === "zh-CN" ? (low ? "起草补货" : "计划降价") : (low ? "Draft restock" : "Plan markdown"),
+        onClick: () => onAskAssistant(currentLocale() === "zh-CN" ? (low ? `为 ${ref} 起草补货方案。` : `为 ${ref} 制定降价方案。`) : (low ? `Draft a restock plan for ${ref}.` : `Plan a markdown for ${ref}.`)),
       }}
     />
   );
@@ -142,7 +144,7 @@ function InventoryRow({ alert, onAskAssistant }: { alert: InventoryAlert; onAskA
 function Insights({ insights, onAskAssistant }: { insights: HomeInsight[]; onAskAssistant: (text: string) => void }) {
   if (insights.length === 0) return null;
   return (
-    <Panel title="From the assistant" icon={<KindIcon icon="spark" tone="accent" size={24} />}>
+    <Panel title={currentLocale() === "zh-CN" ? "助手建议" : "From the assistant"} icon={<KindIcon icon="spark" tone="accent" size={24} />}>
       <ul className="divide-y divide-(--line)">
         {insights.map((insight) => (
           <li key={insight.insight_id} className="px-[18px] py-2.5">
@@ -153,7 +155,7 @@ function Insights({ insights, onAskAssistant }: { insights: HomeInsight[]; onAsk
               onClick={() => onAskAssistant(insight.prompt)}
               className="mt-1.5 inline-flex items-center gap-1 text-[12.5px] font-semibold text-(--accent-ink) hover:underline"
             >
-              Ask <Icon name="arrow-right" size={13} />
+              {currentLocale() === "zh-CN" ? "询问" : "Ask"} <Icon name="arrow-right" size={13} />
             </button>
           </li>
         ))}
@@ -181,15 +183,15 @@ export default function HomeView({
   const queue = useMemo(() => (data ? rows(data, filter) : []), [data, filter]);
   const now = useMemo(() => new Date(), []);
   const title = `${greeting(now)}${operator ? `, ${operator}` : ""}`;
-  const today = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const today = now.toLocaleDateString(currentLocale() === "zh-CN" ? "zh-CN" : "en-US", { weekday: "long", month: "long", day: "numeric" });
 
   if (failed && !data) {
     return (
       <>
         <PageHeader title={title} subtitle={today} />
         <Notice>
-          The merchant API on port 8000 isn&apos;t reachable. Start it with{" "}
-          <code className="rounded bg-(--well) px-1 font-mono text-[13px]">uvicorn retail.api.main:app --app-dir examples --port 8000</code> and reload.
+          {currentLocale() === "zh-CN" ? "无法连接 8000 端口的商家 API。请运行 " : "The merchant API on port 8000 isn't reachable. Start it with "}
+          <code className="rounded bg-(--well) px-1 font-mono text-[13px]">uvicorn retail.api.main:app --app-dir examples --port 8000</code>{currentLocale() === "zh-CN" ? " 后刷新页面。" : " and reload."}
         </Notice>
       </>
     );
@@ -222,12 +224,12 @@ export default function HomeView({
     <div className="ac-reveal flex flex-col gap-5">
       <PageHeader title={title} subtitle={`${today} · ${briefing(data)}`} />
 
-      <ApprovalsBanner changes={pending} onReview={() => onAskAssistant("Walk me through the changes awaiting my approval and what each one would do.")} />
+      <ApprovalsBanner changes={pending} onReview={() => onAskAssistant(currentLocale() === "zh-CN" ? "逐项说明等待我批准的更改及其影响。" : "Walk me through the changes awaiting my approval and what each one would do.")} />
 
-      <Panel title="This week" subtitle={`${formatPeriodLabel(snapshot.period)}${comparison ? ` · against the ${comparison}` : ""}`} bodyClassName="pb-1">
+      <Panel title={currentLocale() === "zh-CN" ? "本周" : "This week"} subtitle={`${formatPeriodLabel(snapshot.period)}${comparison ? (currentLocale() === "zh-CN" ? ` · 对比${comparison}` : ` · against the ${comparison}`) : ""}`} bodyClassName="pb-1">
         <StatStrip>
           <StatTile
-            label="Sales"
+            label={t("Sales")}
             value={formatMoney(snapshot.sales, currency, { whole: snapshot.sales >= 1000 })}
             changePct={snapshot.sales_change_pct}
             points={values(data.trends?.sales)}
@@ -236,7 +238,7 @@ export default function HomeView({
             ariaLabel="Sales: ask the assistant why"
           />
           <StatTile
-            label="Orders"
+            label={t("Orders")}
             value={formatNumber(snapshot.orders)}
             changePct={snapshot.orders_change_pct}
             points={values(data.trends?.orders)}
@@ -245,7 +247,7 @@ export default function HomeView({
             ariaLabel="Orders: ask the assistant why"
           />
           <StatTile
-            label="Conversion"
+            label={t("Conversion")}
             value={snapshot.conversion_rate != null ? formatRate(snapshot.conversion_rate) : "—"}
             changePct={snapshot.conversion_change_pct}
             points={values(data.trends?.conversion)}
@@ -254,7 +256,7 @@ export default function HomeView({
             ariaLabel="Conversion: ask the assistant why"
           />
           <StatTile
-            label="Average order"
+            label={currentLocale() === "zh-CN" ? "平均订单金额" : "Average order"}
             value={snapshot.average_order_value != null ? formatMoney(snapshot.average_order_value, currency) : "—"}
             changePct={aovChangePct}
             points={values(data.trends?.average_order_value)}
@@ -267,23 +269,23 @@ export default function HomeView({
 
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
         <Panel
-          title="Needs you today"
+          title={currentLocale() === "zh-CN" ? "今天需要关注" : "Needs you today"}
           action={
             <Segmented<Filter>
-              label="Filter attention items"
+              label={currentLocale() === "zh-CN" ? "筛选关注事项" : "Filter attention items"}
               value={filter}
               onChange={setFilter}
               options={[
-                { id: "all", label: "All", count: counts.orders + counts.stock + counts.slow },
-                { id: "orders", label: "Orders", count: counts.orders },
-                { id: "stock", label: "Low stock", count: counts.stock },
-                { id: "slow", label: "Slow", count: counts.slow },
+                { id: "all", label: t("All"), count: counts.orders + counts.stock + counts.slow },
+                { id: "orders", label: t("Orders"), count: counts.orders },
+                { id: "stock", label: t("Low stock"), count: counts.stock },
+                { id: "slow", label: currentLocale() === "zh-CN" ? "滞销" : "Slow", count: counts.slow },
               ]}
             />
           }
         >
           {queue.length === 0 ? (
-            <p className="px-[18px] pb-4 pt-1 text-[13.5px] text-(--ink-soft)">Nothing needs you today.</p>
+            <p className="px-[18px] pb-4 pt-1 text-[13.5px] text-(--ink-soft)">{currentLocale() === "zh-CN" ? "今天没有需要处理的事项。" : "Nothing needs you today."}</p>
           ) : (
             <>
               <AttentionList>
@@ -298,7 +300,7 @@ export default function HomeView({
               <QueueOverflow
                 hidden={queue.length - ROW_CAP}
                 link={{
-                  label: "See all",
+                  label: currentLocale() === "zh-CN" ? "查看全部" : "See all",
                   // The hidden rows are order issues first, so open Orders when any of them is one.
                   onClick: () => onNavigate(queue.slice(ROW_CAP).some((row) => row.kind === "issue") ? "orders" : "inventory"),
                 }}
@@ -309,9 +311,9 @@ export default function HomeView({
 
         <div className="flex flex-col gap-4">
           <Insights insights={data.insights ?? []} onAskAssistant={onAskAssistant} />
-          <Panel title="Recent orders" action={<ViewLink label="All orders" onClick={() => onNavigate("orders")} />}>
+          <Panel title={t("Recent orders")} action={<ViewLink label={currentLocale() === "zh-CN" ? "全部订单" : "All orders"} onClick={() => onNavigate("orders")} />}>
             {data.recent_orders.length === 0 ? (
-              <p className="px-[18px] pb-4 text-[13px] text-(--ink-soft)">No orders yet.</p>
+              <p className="px-[18px] pb-4 text-[13px] text-(--ink-soft)">{currentLocale() === "zh-CN" ? "暂无订单。" : "No orders yet."}</p>
             ) : (
               <RecordList rows={orderRows(data.recent_orders.slice(0, 4))} />
             )}

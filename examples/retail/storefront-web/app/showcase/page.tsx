@@ -8,6 +8,7 @@
 import CartPanel from "@/components/CartPanel";
 import GenerativeBlock from "@/components/generative";
 import { SHOWCASE, SHOWCASE_CART } from "@/lib/showcase-fixtures";
+import { LanguageSwitcher, t, translateDeep, useLocale } from "web-shared";
 
 const SECTIONS = Object.keys(SHOWCASE) as (keyof typeof SHOWCASE)[];
 
@@ -21,19 +22,21 @@ function Section({ name, children }: { name: string; children: React.ReactNode }
 }
 
 export default function ShowcasePage() {
+  const { locale } = useLocale();
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
+      <LanguageSwitcher className="fixed right-4 top-4 z-50" />
       <p className="text-[11px] font-semibold uppercase tracking-widest text-(--ink-soft)">
-        ACME component showcase (fixture data)
+        {t("ACME component showcase (fixture data)")}
       </p>
       {SECTIONS.map((name) => (
         <Section key={name} name={name}>
-          <GenerativeBlock block={{ component: name, payload: SHOWCASE[name] }} status="final" onAdd={() => true} />
+          <GenerativeBlock block={translateDeep({ component: name, payload: SHOWCASE[name] }, locale)} status="final" onAdd={() => true} />
         </Section>
       ))}
       <Section name="cart">
         <div className="flex h-[440px] flex-col overflow-hidden rounded-xl border border-(--line) bg-(--card)">
-          <CartPanel cart={SHOWCASE_CART} />
+          <CartPanel cart={translateDeep(SHOWCASE_CART, locale)} />
         </div>
       </Section>
     </main>

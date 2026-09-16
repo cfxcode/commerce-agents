@@ -1,6 +1,8 @@
 // Copyright 2026 Anthropic PBC
 // SPDX-License-Identifier: Apache-2.0
 
+import { humanizeField, t } from "web-shared";
+
 /** Image-less products get a tile color and glyph from id and category. */
 
 const TILE_CLASSES = [
@@ -80,9 +82,9 @@ export function attributeChips(product: { attributes?: Record<string, string> })
   return Object.entries(product.attributes ?? {})
     .filter(([key]) => !STAMPED_ATTRIBUTES.has(key))
     .map(([key, value]) => {
-      if (/^(yes|true)$/i.test(value)) return key.replaceAll("_", " ");
-      if (/^(no|false)$/i.test(value)) return null;
-      return value;
+      if (/^(yes|true|是)$/i.test(value)) return humanizeField(key);
+      if (/^(no|false|否)$/i.test(value)) return null;
+      return t(value);
     })
     .filter((chip): chip is string => Boolean(chip))
     .slice(0, 3);

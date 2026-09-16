@@ -138,6 +138,26 @@ def _cached_bytes(call: dict[str, Any]) -> tuple[str, str]:
     )
 
 
+async def test_ui_language_is_in_the_first_system_block_without_rewriting_user_text(
+    run, loop, session
+):
+    calls = await run(
+        loop.ungated_turn,
+        [text_message("Hello")],
+        session=session.model_copy(update={"response_language": "English"}),
+    )
+    assert calls[0]["system"][0]["text"].startswith(
+        "# Reply language\nFor this turn, respond only in English."
+    )
+    assert calls[0]["messages"][0]["content"] == loop.ungated_turn
+    chinese = await run(
+        loop.ungated_turn,
+        [text_message("你好")],
+        session=session.model_copy(update={"response_language": "Simplified Chinese"}),
+    )
+    assert "respond only in Simplified Chinese" in chinese[0]["system"][0]["text"]
+
+
 def _context_block(call: dict[str, Any]) -> str:
     """The per-request context: the second system block, behind the static block's marker."""
     static, context = call["system"]

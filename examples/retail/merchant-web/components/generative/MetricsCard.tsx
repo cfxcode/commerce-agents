@@ -1,14 +1,14 @@
 // Copyright 2026 Anthropic PBC
 // SPDX-License-Identifier: Apache-2.0
 
-import { ChangeChip, formatMoney, formatNumber, formatPeriodLabel, formatRate, GenCard, GenCardHeader, Sparkline, titleCase } from "web-shared";
+import { ChangeChip, formatMoney, formatNumber, formatPeriodLabel, formatRate, GenCard, GenCardHeader, Sparkline, t, titleCase } from "web-shared";
 import type { MetricEntry, MetricsPayload } from "@/lib/types";
 
 const CURRENCY_METRICS = new Set(["sales", "average_order_value", "revenue", "spend"]);
 const RATE_METRICS = new Set(["conversion_rate", "return_rate", "click_through_rate"]);
 
 function metricLabel(metric: string): string {
-  if (metric === "average_order_value") return "Average order";
+  if (metric === "average_order_value") return t("Average order");
   return titleCase(metric);
 }
 

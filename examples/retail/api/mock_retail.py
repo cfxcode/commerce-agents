@@ -48,6 +48,8 @@ from shopping_agent import (
     UserPreferences,
 )
 
+from .localization import canonical_category, chinese_score, chinese_text, search_query
+
 DATA_DIR = example_data_dir(__file__)
 
 # Attributes stamped onto products at boot rather than authored in the catalog. The
@@ -188,7 +190,10 @@ class MockRetail(StorefrontBackend):
 
     @staticmethod
     def _soft_filter(product: ProductDetails, filters: SearchFilters) -> bool:
-        if filters.category and filters.category.lower() not in (product.category or "").lower():
+        if (
+            filters.category
+            and canonical_category(filters.category).lower() not in (product.category or "").lower()
+        ):
             return False
         if not filters.attributes:
             return True
@@ -198,6 +203,7 @@ class MockRetail(StorefrontBackend):
             if k not in _STAMPED_ATTRIBUTES
         )
         haystack += f" {product.title.lower()} {option_text(product).lower()}"
+        haystack += " " + " ".join(chinese_text(value) for value in product.attributes.values())
         return all(str(value).lower() in haystack for value in filters.attributes.values())
 
     async def search_products(
@@ -210,10 +216,17 @@ class MockRetail(StorefrontBackend):
         del session
         ranked = rank_products(
             self.products.values(),
-            query,
+            search_query(query),
             filters,
             limit,
-            score=self._score,
+            score=lambda product, tokens: (
+                self._score(product, tokens)
+                + chinese_score(
+                    {"title": product.title, "description": product.short_description or ""},
+                    _SEARCH_WEIGHTS,
+                    query,
+                )
+            ),
             hard_filter=within_price_and_rating,
             soft_filter=self._soft_filter,
         )
@@ -337,7 +350,26 @@ class MockRetail(StorefrontBackend):
 
     async def search_policies(self, session: ShoppingSessionContext, query: str) -> list[Policy]:
         del session
-        return search_help(self._policies, query)
+        english = search_help(self._policies, search_query(query))
+        localized = sorted(
+            self._policies,
+            key=lambda policy: chinese_score(
+                {"title": policy.title, "content": policy.content},
+                {"title": 2.0, "content": 1.0},
+                query,
+            ),
+            reverse=True,
+        )
+        hits = [
+            policy
+            for policy in localized
+            if chinese_score(
+                {"title": policy.title, "content": policy.content},
+                {"title": 2.0, "content": 1.0},
+                query,
+            )
+        ]
+        return list({policy.policy_id: policy for policy in [*english, *hits]}.values())[:3]
 
     @staticmethod
     def _pickup_eta(now: datetime) -> str:

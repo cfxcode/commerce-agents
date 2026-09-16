@@ -7,6 +7,13 @@ import { type ButtonHTMLAttributes, type ReactNode, useEffect, useId, useState }
 import { createPortal } from "react-dom";
 import { formatChangePct } from "./format";
 import { Icon, type IconName } from "./icons";
+import { t } from "./i18n";
+
+function localizedNode(value: ReactNode): ReactNode {
+  if (typeof value === "string") return t(value);
+  if (Array.isArray(value)) return value.map(localizedNode);
+  return value;
+}
 
 export type Tone = "ok" | "warn" | "danger" | "info" | "violet" | "accent" | "muted";
 
@@ -31,11 +38,11 @@ const TONE_SOFT: Record<Tone, string> = {
 export function Pill({ tone = "muted", dot = false, children, title }: { tone?: Tone; dot?: boolean; children: ReactNode; title?: string }) {
   return (
     <span
-      title={title}
+      title={title ? t(title) : undefined}
       className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11.5px] font-semibold leading-[1.35] ${TONE_SOFT[tone]}`}
     >
       {dot ? <i aria-hidden className="h-1.5 w-1.5 rounded-full bg-current" /> : null}
-      {children}
+      {localizedNode(children)}
     </span>
   );
 }
@@ -96,8 +103,8 @@ export function PageHeader({ title, subtitle, children }: { title: string; subti
   return (
     <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
       <div className="min-w-0 flex-1">
-        <h1 className="page-title text-[24px] font-semibold leading-tight tracking-[-0.02em] text-(--ink)">{title}</h1>
-        {subtitle ? <p className="mt-1 text-[13.5px] leading-snug text-(--ink-soft)">{subtitle}</p> : null}
+        <h1 className="page-title text-[24px] font-semibold leading-tight tracking-[-0.02em] text-(--ink)">{t(title)}</h1>
+        {subtitle ? <p className="mt-1 text-[13.5px] leading-snug text-(--ink-soft)">{localizedNode(subtitle)}</p> : null}
       </div>
       {children ? <div className="flex shrink-0 flex-wrap items-center gap-2">{children}</div> : null}
     </div>
@@ -125,8 +132,8 @@ export function Panel({
       {title ? (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-[18px] pb-1.5 pt-3.5">
           {icon}
-          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-(--ink)">{title}</h2>
-          {subtitle ? <span className="text-[12.5px] text-(--ink-soft)">{subtitle}</span> : null}
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-(--ink)">{localizedNode(title)}</h2>
+          {subtitle ? <span className="text-[12.5px] text-(--ink-soft)">{localizedNode(subtitle)}</span> : null}
           {action ? <div className="ml-auto flex items-center gap-2">{action}</div> : null}
         </div>
       ) : null}
@@ -153,7 +160,7 @@ export function Segmented<T extends string>({
   label: string;
 }) {
   return (
-    <div role="group" aria-label={label} className="inline-flex gap-0.5 rounded-[9px] bg-(--ground) p-[3px] text-[12.5px]">
+    <div role="group" aria-label={t(label)} className="inline-flex gap-0.5 rounded-[9px] bg-(--ground) p-[3px] text-[12.5px]">
       {options.map((option) => {
         const on = option.id === value;
         return (
@@ -166,7 +173,7 @@ export function Segmented<T extends string>({
               on ? "bg-(--card) font-semibold text-(--ink) shadow-(--shadow-sm)" : "font-medium text-(--ink-soft) hover:text-(--ink)"
             }`}
           >
-            {option.label}
+            {t(option.label)}
             {option.count != null ? <span className="ml-1 font-medium tabular-nums text-(--ink-faint)">{option.count}</span> : null}
           </button>
         );
@@ -207,7 +214,7 @@ export function Sparkline({
   const [endX, endY] = coords[coords.length - 1];
   const path = line(coords);
   return (
-    <div className={`relative ${className}`} style={{ height }} role="img" aria-label={label}>
+    <div className={`relative ${className}`} style={{ height }} role="img" aria-label={t(label)}>
       <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
         <defs>
           <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
@@ -252,7 +259,7 @@ export function StatTile({
   const body = (
     <>
       <div className="relative text-[12.5px] font-medium whitespace-nowrap text-(--ink-soft)">
-        {label}
+        {t(label)}
         {onClick ? (
           <span className="absolute right-0 top-0 flex items-center gap-1 bg-inherit text-[11.5px] text-(--ink-faint) opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
             Ask why <Icon name="arrow-right" size={12} />
@@ -268,7 +275,7 @@ export function StatTile({
   );
   const className = "group block w-full px-[18px] pb-3.5 pt-4 text-left transition-colors";
   return onClick ? (
-    <button type="button" onClick={onClick} aria-label={ariaLabel} className={`${className} hover:bg-(--ground)/60 focus-visible:bg-(--ground)/60 focus-visible:outline-none`}>
+    <button type="button" onClick={onClick} aria-label={ariaLabel ? t(ariaLabel) : undefined} className={`${className} hover:bg-(--ground)/60 focus-visible:bg-(--ground)/60 focus-visible:outline-none`}>
       {body}
     </button>
   ) : (
@@ -294,7 +301,7 @@ export function AskButton({ label, onClick }: { label: string; onClick: () => vo
       className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-(--line-strong) bg-(--card) px-2.5 py-[5px] text-[12px] font-semibold text-(--ink-2) transition-colors hover:border-(--accent) hover:bg-(--accent-soft) hover:text-(--accent-ink)"
     >
       <Icon name="spark" size={13} className="text-(--accent)" />
-      {label}
+      {t(label)}
     </button>
   );
 }
@@ -319,8 +326,8 @@ export function SearchField({
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        aria-label={label}
+        placeholder={t(placeholder)}
+        aria-label={t(label)}
         className="min-w-0 flex-1 bg-transparent text-[14px] text-(--ink) outline-none placeholder:text-(--ink-faint)"
       />
     </label>
@@ -331,7 +338,7 @@ export function SearchField({
 export function Fact({ label, value, tone }: { label: string; value: ReactNode; tone?: "warn" | "danger" }) {
   return (
     <div className="min-w-0 px-2.5 py-2.5">
-      <div className="text-[11.5px] font-medium leading-tight text-(--ink-soft)">{label}</div>
+      <div className="text-[11.5px] font-medium leading-tight text-(--ink-soft)">{t(label)}</div>
       <div className={`mt-0.5 truncate text-[17px] font-semibold tabular-nums tracking-[-0.01em] ${tone === "danger" ? "text-(--danger)" : tone === "warn" ? "text-(--warn)" : "text-(--ink)"}`}>
         {value ?? "—"}
       </div>
@@ -347,8 +354,8 @@ export function Facts({ children }: { children: ReactNode }) {
 export function SectionTitle({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
     <h3 className="mb-2 flex items-baseline gap-2 text-[13px] font-semibold text-(--ink)">
-      {children}
-      {aside ? <span className="ml-auto text-[12px] font-normal text-(--ink-soft)">{aside}</span> : null}
+      {localizedNode(children)}
+      {aside ? <span className="ml-auto text-[12px] font-normal text-(--ink-soft)">{localizedNode(aside)}</span> : null}
     </h3>
   );
 }
@@ -378,7 +385,7 @@ export function Skeleton({ className = "" }: { className?: string }) {
 
 /** The empty or unreachable state inside a view. */
 export function Notice({ children }: { children: ReactNode }) {
-  return <div className="rounded-2xl border border-(--line) bg-(--card) p-6 text-[14px] leading-relaxed text-(--ink-soft)">{children}</div>;
+  return <div className="rounded-2xl border border-(--line) bg-(--card) p-6 text-[14px] leading-relaxed text-(--ink-soft)">{localizedNode(children)}</div>;
 }
 
 /** A right-hand sheet over a scrim, portalled to the body; Escape and the scrim close it. */
@@ -419,8 +426,8 @@ export function Sheet({
       >
         <div className="flex items-center gap-2 border-b border-(--line) py-3 pl-[18px] pr-3">
           <div id={titleId} className="min-w-0 flex-1 truncate text-[14px] font-semibold text-(--ink)">
-            {title}
-            {detail ? <span className="ml-2 font-normal tabular-nums text-(--ink-soft)">{detail}</span> : null}
+            {localizedNode(title)}
+            {detail ? <span className="ml-2 font-normal tabular-nums text-(--ink-soft)">{localizedNode(detail)}</span> : null}
           </div>
           <IconButton icon="x" label={closeLabel} onClick={onClose} />
         </div>
@@ -437,8 +444,8 @@ export function IconButton({ icon, label, onClick, className = "" }: { icon: Ico
     <button
       type="button"
       onClick={onClick}
-      aria-label={label}
-      title={label}
+      aria-label={t(label)}
+      title={t(label)}
       className={`grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg text-(--ink-soft) transition-colors hover:bg-(--ground) hover:text-(--ink) ${className}`}
     >
       <Icon name={icon} size={17} />
@@ -473,7 +480,7 @@ export function Button({
       {...rest}
     >
       {icon ? <Icon name={icon} size={size === "sm" ? 15 : 16} /> : null}
-      {children}
+      {localizedNode(children)}
     </button>
   );
 }

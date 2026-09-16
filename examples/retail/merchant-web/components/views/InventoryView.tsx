@@ -3,7 +3,7 @@
 
 "use client";
 
-import { AskButton, coverLabel, formatNumber, KindIcon, MiniBar, Notice, optionValuesLabel, PageHeader, Panel, Pill, plural, Skeleton, useResource } from "web-shared";
+import { AskButton, coverLabel, currentLocale, formatNumber, KindIcon, MiniBar, Notice, optionValuesLabel, PageHeader, Panel, Pill, plural, Skeleton, t, useResource } from "web-shared";
 import { fetchAlerts } from "@/lib/api";
 import { INVENTORY_KINDS } from "@/lib/kinds";
 import type { InventoryAlert } from "@/lib/types";
@@ -14,7 +14,7 @@ function AlertRow({ alert, onAskAssistant }: { alert: InventoryAlert; onAskAssis
   const low = alert.kind === "low_stock";
   const chosen = optionValuesLabel(alert);
   const name = chosen ? `${alert.title} in ${chosen}` : alert.title;
-  const prompt = low ? `Draft a restock plan for ${name} (${alert.listing_id}).` : `Plan a markdown for ${name} (${alert.listing_id}).`;
+  const prompt = currentLocale() === "zh-CN" ? (low ? `为 ${name}（${alert.listing_id}）起草补货方案。` : `为 ${name}（${alert.listing_id}）制定降价方案。`) : (low ? `Draft a restock plan for ${name} (${alert.listing_id}).` : `Plan a markdown for ${name} (${alert.listing_id}).`);
   return (
     <li className="flex items-center gap-3 px-[18px] py-3">
       <KindIcon icon={style.icon} tone={soldOut ? "danger" : style.tone} />
@@ -25,28 +25,28 @@ function AlertRow({ alert, onAskAssistant }: { alert: InventoryAlert; onAskAssis
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12.5px] tabular-nums text-(--ink-soft)">
           <span>{alert.listing_id}</span>
-          {alert.sales_last_30d != null ? <span>· {formatNumber(alert.sales_last_30d)} sold in 30 days</span> : null}
-          {low && alert.threshold != null ? <span>· reorder at {formatNumber(alert.threshold)}</span> : null}
+          {alert.sales_last_30d != null ? <span>· {currentLocale() === "zh-CN" ? `30 天售出 ${formatNumber(alert.sales_last_30d)} 件` : `${formatNumber(alert.sales_last_30d)} sold in 30 days`}</span> : null}
+          {low && alert.threshold != null ? <span>· {currentLocale() === "zh-CN" ? `补货点 ${formatNumber(alert.threshold)}` : `reorder at ${formatNumber(alert.threshold)}`}</span> : null}
           {low && alert.stock > 0 && alert.storefront_visible ? (
             <Pill tone="warn" dot>
-              Storefront shows “Only {formatNumber(alert.stock)} left”
+              {currentLocale() === "zh-CN" ? `商城显示“仅剩 ${formatNumber(alert.stock)} 件”` : `Storefront shows “Only ${formatNumber(alert.stock)} left”`}
             </Pill>
           ) : null}
-          {soldOut && alert.storefront_visible === false ? <span>· hidden from the storefront</span> : null}
+          {soldOut && alert.storefront_visible === false ? <span>· {currentLocale() === "zh-CN" ? "已从商城隐藏" : "hidden from the storefront"}</span> : null}
         </div>
       </div>
       <div className="w-32 shrink-0 whitespace-nowrap text-right tabular-nums">
         <div className={`text-[15px] font-semibold ${soldOut ? "text-(--danger)" : low ? "text-(--warn)" : "text-(--ink)"}`}>
           {soldOut ? "0" : formatNumber(alert.stock)}
-          <span className="ml-1 text-[11.5px] font-medium text-(--ink-soft)">in stock</span>
+          <span className="ml-1 text-[11.5px] font-medium text-(--ink-soft)">{t("in stock")}</span>
         </div>
         <div className="mt-0.5 flex items-center justify-end gap-1.5 text-[11.5px] text-(--ink-soft)">
           {/* Stock against the reorder threshold: empty at zero, full at twice the threshold. */}
           {low && alert.threshold ? <MiniBar value={alert.stock / (alert.threshold * 2)} tone={soldOut ? "danger" : "warn"} /> : null}
-          {alert.days_of_cover != null && !soldOut ? <span>{coverLabel(alert.days_of_cover)}</span> : soldOut ? <span>sold out</span> : null}
+          {alert.days_of_cover != null && !soldOut ? <span>{coverLabel(alert.days_of_cover)}</span> : soldOut ? <span>{t("sold out")}</span> : null}
         </div>
       </div>
-      <AskButton label={low ? "Draft restock" : "Plan markdown"} onClick={() => onAskAssistant(prompt)} />
+      <AskButton label={currentLocale() === "zh-CN" ? (low ? "起草补货" : "计划降价") : (low ? "Draft restock" : "Plan markdown")} onClick={() => onAskAssistant(prompt)} />
     </li>
   );
 }
@@ -63,11 +63,11 @@ export default function InventoryView({ refreshKey, onAskAssistant }: { refreshK
   return (
     <div className="ac-reveal @container flex flex-col gap-4">
       <PageHeader
-        title="Inventory"
-        subtitle={data ? `${lowStock.length} low or out of stock · ${plural(slowMovers.length, "slow mover")}${tiedUp ? ` with ${formatNumber(tiedUp)} units tied up` : ""}` : undefined}
+        title={t("Inventory")}
+        subtitle={data ? (currentLocale() === "zh-CN" ? `${lowStock.length} 个低库存或缺货 · ${slowMovers.length} 个滞销商品${tiedUp ? `，占用 ${formatNumber(tiedUp)} 件库存` : ""}` : `${lowStock.length} low or out of stock · ${plural(slowMovers.length, "slow mover")}${tiedUp ? ` with ${formatNumber(tiedUp)} units tied up` : ""}`) : undefined}
       />
       {failed && !data ? (
-        <Notice>The merchant API isn&apos;t reachable, so inventory alerts can&apos;t load.</Notice>
+        <Notice>{currentLocale() === "zh-CN" ? "无法连接商家 API，因此无法加载库存预警。" : "The merchant API isn't reachable, so inventory alerts can't load."}</Notice>
       ) : !data ? (
         <div className="grid gap-4 @4xl:grid-cols-2">
           <Skeleton className="h-72" />
@@ -75,9 +75,9 @@ export default function InventoryView({ refreshKey, onAskAssistant }: { refreshK
         </div>
       ) : (
         <div className="grid items-start gap-4 @4xl:grid-cols-2">
-          <Panel title="Low stock" subtitle="soonest to run out first">
+          <Panel title={t("Low stock")} subtitle={currentLocale() === "zh-CN" ? "按最先售罄排序" : "soonest to run out first"}>
             {lowStock.length === 0 ? (
-              <p className="px-[18px] pb-4 text-[13.5px] text-(--ink-soft)">No low-stock listings.</p>
+              <p className="px-[18px] pb-4 text-[13.5px] text-(--ink-soft)">{currentLocale() === "zh-CN" ? "没有低库存商品。" : "No low-stock listings."}</p>
             ) : (
               <ul className="divide-y divide-(--line)">
                 {lowStock.map((alert) => (
@@ -86,9 +86,9 @@ export default function InventoryView({ refreshKey, onAskAssistant }: { refreshK
               </ul>
             )}
           </Panel>
-          <Panel title="Slow movers" subtitle="stock well above the last 30 days of sales">
+          <Panel title={currentLocale() === "zh-CN" ? "滞销商品" : "Slow movers"} subtitle={currentLocale() === "zh-CN" ? "库存明显高于近 30 天销量" : "stock well above the last 30 days of sales"}>
             {slowMovers.length === 0 ? (
-              <p className="px-[18px] pb-4 text-[13.5px] text-(--ink-soft)">No slow movers.</p>
+              <p className="px-[18px] pb-4 text-[13.5px] text-(--ink-soft)">{currentLocale() === "zh-CN" ? "没有滞销商品。" : "No slow movers."}</p>
             ) : (
               <ul className="divide-y divide-(--line)">
                 {slowMovers.map((alert) => (

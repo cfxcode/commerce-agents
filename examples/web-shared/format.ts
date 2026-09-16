@@ -1,17 +1,23 @@
 // Copyright 2026 Anthropic PBC
 // SPDX-License-Identifier: Apache-2.0
 
+import { currentLocale, t } from "./i18n-core";
+
 const moneyFormatters = new Map<string, Intl.NumberFormat>();
+
+function intlLocale(): string {
+  return currentLocale() === "zh-CN" ? "zh-CN" : "en-US";
+}
 
 export function formatMoney(
   value: number,
   currency = "USD",
   options: { whole?: boolean } = {},
 ): string {
-  const key = `${currency}:${options.whole ? 0 : 2}`;
+  const key = `${intlLocale()}:${currency}:${options.whole ? 0 : 2}`;
   let formatter = moneyFormatters.get(key);
   if (!formatter) {
-    formatter = new Intl.NumberFormat("en-US", {
+    formatter = new Intl.NumberFormat(intlLocale(), {
       style: "currency",
       currency,
       maximumFractionDigits: options.whole ? 0 : 2,
@@ -21,10 +27,8 @@ export function formatMoney(
   return formatter.format(value);
 }
 
-const plain = new Intl.NumberFormat("en-US");
-
 export function formatNumber(value: number): string {
-  return plain.format(value);
+  return new Intl.NumberFormat(intlLocale()).format(value);
 }
 
 /** Rates arrive as percent values (3.4 means 3.4%). */
@@ -46,7 +50,7 @@ const ISO_DAY = /\d{4}-\d{2}-\d{2}/g;
 function dayLabel(value: string): string {
   const date = parseDate(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return date.toLocaleDateString(intlLocale(), { month: "short", day: "numeric", year: "numeric" });
 }
 
 /** "Jun 24, 2026"; dates inside a trailing note ("(revised from ...)") are formatted too. */
@@ -61,7 +65,7 @@ export function formatDayMonth(value: string | null | undefined): string {
   if (!value) return "";
   const date = parseDate(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return date.toLocaleDateString(intlLocale(), { month: "short", day: "numeric" });
 }
 
 /** "Fri, Aug 21", or "Fri, Jan 2, 2027" outside the current year. */
@@ -70,21 +74,24 @@ export function formatWeekday(value: string | null | undefined): string {
   const date = parseDate(value);
   if (Number.isNaN(date.getTime())) return value;
   const year = date.getFullYear() === new Date().getFullYear() ? undefined : "numeric";
-  return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year });
+  return date.toLocaleDateString(intlLocale(), { weekday: "short", month: "short", day: "numeric", year });
 }
 
 /** "1 order", "3 orders". */
 export function plural(count: number, one: string, many = `${one}s`): string {
-  return `${formatNumber(count)} ${count === 1 ? one : many}`;
+  const noun = count === 1 ? one : many;
+  return `${formatNumber(count)} ${t(noun)}`;
 }
 
 /** "12 days of cover", "1 day of cover", "<1 day of cover". */
 export function coverLabel(days: number): string {
+  if (currentLocale() === "zh-CN") return days < 1 ? "不足 1 天库存覆盖" : `${formatNumber(Math.round(days))} 天库存覆盖`;
   return days < 1 ? "<1 day of cover" : `${plural(Math.round(days), "day")} of cover`;
 }
 
 /** "sells out in ~4 days", "sells out within a day". */
 export function runwayLabel(days: number): string {
+  if (currentLocale() === "zh-CN") return days < 1 ? "将在一天内售罄" : `约 ${formatNumber(Math.round(days))} 天后售罄`;
   return days < 1 ? "sells out within a day" : `sells out in ~${plural(Math.round(days), "day")}`;
 }
 
@@ -104,23 +111,24 @@ export function hasOptions(product: Pick<OptionFields, "options">): boolean {
 /** "twin · full · queen · king", one group per option separated by " / "; empty for a plain product. */
 export function optionSummary(product: Pick<OptionFields, "options">): string {
   return Object.values(product.options ?? {})
-    .map((values) => values.join(" · "))
+    .map((values) => values.map((value) => t(value)).join(" · "))
     .join(" / ");
 }
 
 /** "king · slate" for a variant or a cart line; empty when nothing was chosen. */
 export function optionValuesLabel(item: Pick<OptionFields, "option_values">): string {
-  return Object.values(item.option_values ?? {}).join(" · ");
+  return Object.values(item.option_values ?? {}).map((value) => t(value)).join(" · ");
 }
 
 /** "From $349" on a family record, whose price is its lowest variant's; the plain price otherwise. */
 export function priceLabel(product: OptionFields): string {
   const money = formatMoney(product.price, product.currency);
-  return hasOptions(product) ? `From ${money}` : money;
+  return hasOptions(product) ? `${t("From ")}${money}` : money;
 }
 
 export function titleCase(value: string): string {
-  return value.replaceAll("_", " ").replace(/^\w/, (c) => c.toUpperCase());
+  const title = value.replaceAll("_", " ").replace(/^\w/, (c) => c.toUpperCase());
+  return t(title) === title ? t(title.toLowerCase()) : t(title);
 }
 
 /** "attributes_min_nights" as "Min nights". */
@@ -142,6 +150,7 @@ export interface FieldKinds {
 /** Renders a staged change's before/after value by what its field name says it is. */
 export function formatFieldValue(field: string, value: unknown, kinds: FieldKinds = {}): string {
   if (value === null || value === undefined || value === "") return "—";
+  if (typeof value === "boolean") return t(value ? "Yes" : "No");
   const isCurrency = kinds.currency?.includes(field) || CURRENCY_FIELD.test(field);
   const isPercent = !isCurrency && (kinds.percent?.includes(field) || PERCENT_FIELD.test(field));
   const isCount = COUNT_FIELD.test(field);
@@ -192,7 +201,7 @@ export function formatComparisonLabel(
     const compareEnd = parseDate(compare[2]).getTime();
     const compareDays = Math.round((compareEnd - parseDate(compare[1]).getTime()) / dayMs);
     if (primaryDays === compareDays && Math.round((primaryStart - compareEnd) / dayMs) === 1) {
-      return primaryDays === 6 ? "prior week" : "prior period";
+      return primaryDays === 6 ? t("prior week") : t("prior period");
     }
   }
   return formatPeriodLabel(compareTo);
@@ -203,8 +212,8 @@ export function describeProposer(change: {
   created_by_kind?: "operator" | "agent";
 }): string {
   return change.created_by_kind === "agent"
-    ? `Proposed by ${change.created_by}'s assistant`
-    : `Staged by ${change.created_by}`;
+    ? currentLocale() === "zh-CN" ? `由 ${change.created_by} 的助手提议` : `Proposed by ${change.created_by}'s assistant`
+    : currentLocale() === "zh-CN" ? `由 ${change.created_by} 暂存` : `Staged by ${change.created_by}`;
 }
 
 /** Approvals are always a person. */
@@ -214,11 +223,11 @@ export function describeResolver(change: {
   discarded_by?: string | null;
   discarded_by_kind?: "operator" | "agent" | null;
 }): string | null {
-  if (change.status === "applied" && change.applied_by) return `Approved by ${change.applied_by}`;
+  if (change.status === "applied" && change.applied_by) return currentLocale() === "zh-CN" ? `由 ${change.applied_by} 批准` : `Approved by ${change.applied_by}`;
   if (change.status === "discarded" && change.discarded_by) {
     return change.discarded_by_kind === "agent"
-      ? `Dismissed by ${change.discarded_by}'s assistant`
-      : `Dismissed by ${change.discarded_by}`;
+      ? currentLocale() === "zh-CN" ? `由 ${change.discarded_by} 的助手忽略` : `Dismissed by ${change.discarded_by}'s assistant`
+      : currentLocale() === "zh-CN" ? `由 ${change.discarded_by} 忽略` : `Dismissed by ${change.discarded_by}`;
   }
   return null;
 }
@@ -226,9 +235,9 @@ export function describeResolver(change: {
 /** "Good morning" before noon, "Good afternoon" until six, then "Good evening". */
 export function greeting(now: Date): string {
   const hour = now.getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
+  if (hour < 12) return t("Good morning");
+  if (hour < 18) return t("Good afternoon");
+  return t("Good evening");
 }
 
 export interface HandoffLink {

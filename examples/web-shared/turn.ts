@@ -24,6 +24,7 @@ import type {
   UISlotStatus,
 } from "./protocol";
 import { describeToolCall } from "./tool-copy";
+import { t } from "./i18n";
 
 /** Pace between structural items when a burst arrives at once. */
 const DRIP_MS = 180;
@@ -417,7 +418,7 @@ export function useAgentTurn(api: AgentApi, options: AgentTurnOptions): AgentTur
           return;
         }
         case "error": {
-          const text = String(event.data.message ?? "Something went wrong.");
+          const text = t(String(event.data.message ?? "Something went wrong."));
           updateTurn(turn, (item) => ({
             ...item,
             segments: [...item.segments, { type: "error", text }],
@@ -471,7 +472,7 @@ export function useAgentTurn(api: AgentApi, options: AgentTurnOptions): AgentTur
         updateTurn(turn, (item) =>
           item.segments.length
             ? item
-            : { ...item, segments: [{ type: "error", text: unreachable }] },
+            : { ...item, segments: [{ type: "error", text: t(unreachable) }] },
         );
       } finally {
         // Partials freeze as they are; unadopted skeletons and failed slots go at turn end.

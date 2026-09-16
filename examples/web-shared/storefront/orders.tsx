@@ -10,6 +10,7 @@
 
 import { type ReactNode, useState } from "react";
 import { formatDayMonth, formatMoney, formatWeekday, plural } from "../format";
+import { currentLocale, t } from "../i18n";
 import type { Order } from "../protocol";
 import { AskButton, Notice, PageHeader, Panel, Pill, Segmented, Skeleton, type Tone } from "../ui";
 import { useStoreFrame } from "./frame";
@@ -55,7 +56,7 @@ export function estimateOf(order: Order): { date: string; note: string | null } 
 
 /** The label for a status, the vertical's own word first ("return_initiated" → "Return requested"). */
 export function orderStatusLabel(status: string, labels?: Record<string, string>): string {
-  return labels?.[status] ?? STATUS[status]?.label ?? status.replaceAll("_", " ");
+  return t(labels?.[status] ?? STATUS[status]?.label ?? status.replaceAll("_", " "));
 }
 
 export function OrderStatusPill({ status, labels }: { status: string; labels?: Record<string, string> }) {
@@ -99,7 +100,7 @@ export const ORDER_NOUNS: OrderNouns = {
   cardTitle: "Arriving",
   noneOpen: "Nothing on the way",
   openVerb: "Arrives",
-  closedWhen: (order, date) => (order.status === "delivered" ? `Delivered ${date}` : `Placed ${formatDayMonth(order.placed_at)}`),
+  closedWhen: (order, date) => currentLocale() === "zh-CN" ? (order.status === "delivered" ? `${date}送达` : `${formatDayMonth(order.placed_at)}下单`) : (order.status === "delivered" ? `Delivered ${date}` : `Placed ${formatDayMonth(order.placed_at)}`),
   filters: [
     { id: "open", label: "On the way", match: isOpen },
     { id: "delayed", label: "Delayed", match: (order) => order.status === "delayed" },
@@ -107,6 +108,12 @@ export const ORDER_NOUNS: OrderNouns = {
   ],
   handoff(order) {
     const ref = `order ${order.order_id}`;
+    if (currentLocale() === "zh-CN") {
+      const cnRef = `订单 ${order.order_id}`;
+      if (order.status === "delayed") return { label: "询问原因", prompt: `${cnRef} 为什么延迟，预计何时送达？` };
+      if (order.status === "delivered") return { label: "咨询退货", prompt: `${cnRef} 中的商品现在还能退货吗？` };
+      return { label: "询问", prompt: `${cnRef} 目前是什么状态？` };
+    }
     if (order.status === "delayed") return { label: "Ask why", prompt: `Why is ${ref} delayed, and when will it arrive?` };
     if (order.status === "delivered") return { label: "Ask about a return", prompt: `Can I still return something from ${ref}?` };
     if (isOpen(order)) return { label: "Ask", prompt: `Where is ${ref} right now?` };
@@ -117,16 +124,16 @@ export const ORDER_NOUNS: OrderNouns = {
 function orderTitle(order: Order): string {
   const [first, ...rest] = order.items;
   if (!first) return order.order_id;
-  return rest.length ? `${first.title} + ${rest.length} more` : first.title;
+  return rest.length ? `${first.title} + ${rest.length}${currentLocale() === "zh-CN" ? " 件其他商品" : " more"}` : first.title;
 }
 
 function When({ order, nouns }: { order: Order; nouns: OrderNouns }) {
   const estimate = estimateOf(order);
-  if (!estimate) return <span>Placed {formatDayMonth(order.placed_at)}</span>;
+  if (!estimate) return <span>{currentLocale() === "zh-CN" ? `${formatDayMonth(order.placed_at)}下单` : `Placed ${formatDayMonth(order.placed_at)}`}</span>;
   if (!isOpen(order)) return <span>{nouns.closedWhen(order, estimate.date)}</span>;
   return (
     <span className={order.status === "delayed" ? "font-semibold text-(--warn)" : ""} title={estimate.note ?? undefined}>
-      {order.status === "delayed" ? "Expected" : nouns.openVerb} {estimate.date}
+      {currentLocale() === "zh-CN" ? `${estimate.date}${order.status === "delayed" ? "预计送达" : "送达"}` : <>{order.status === "delayed" ? "Expected" : nouns.openVerb} {estimate.date}</>}
     </span>
   );
 }
@@ -172,16 +179,16 @@ export function ArrivingPanel({
   thumb: (order: Order) => ReactNode;
   onSeeAll?: () => void;
 }) {
-  if (!orders) return failed ? <Notice>Couldn&apos;t load your {nouns.title.toLowerCase()}.</Notice> : <Skeleton className="h-[188px]" />;
+  if (!orders) return failed ? <Notice>{currentLocale() === "zh-CN" ? `无法加载你的${t(nouns.title)}。` : `Couldn't load your ${nouns.title.toLowerCase()}.`}</Notice> : <Skeleton className="h-[188px]" />;
   // A shopper with no history gets no card; one with nothing open sees the two most recent.
   if (!orders.length) return null;
   const open = upcoming(orders).slice(0, 3);
   const shown = open.length ? open : orders.slice(0, 2);
   return (
     <Panel
-      title={nouns.cardTitle}
-      subtitle={open.length ? plural(orders.length, nouns.one) : nouns.noneOpen}
-      action={onSeeAll ? <MoreLink label={`All ${nouns.title.toLowerCase()}`} onClick={onSeeAll} /> : null}
+      title={t(nouns.cardTitle)}
+      subtitle={open.length ? plural(orders.length, nouns.one) : t(nouns.noneOpen)}
+      action={onSeeAll ? <MoreLink label={currentLocale() === "zh-CN" ? `全部${t(nouns.title)}` : `All ${nouns.title.toLowerCase()}`} onClick={onSeeAll} /> : null}
     >
       <ul>
         {shown.map((order) => (
@@ -213,20 +220,20 @@ export function OrdersView({
   const title = nouns.title.toLowerCase();
   return (
     <StorePage>
-      <PageHeader title={nouns.title} subtitle={subtitle}>
+      <PageHeader title={t(nouns.title)} subtitle={subtitle}>
         <Segmented
-          label={`Filter ${title}`}
+          label={currentLocale() === "zh-CN" ? `筛选${t(nouns.title)}` : `Filter ${title}`}
           value={filter}
           onChange={setFilter}
           options={[
-            { id: "all", label: "All", count: all.length },
-            ...nouns.filters.map((entry) => ({ id: entry.id, label: entry.label, count: all.filter(entry.match).length })),
+            { id: "all", label: t("All"), count: all.length },
+            ...nouns.filters.map((entry) => ({ id: entry.id, label: t(entry.label), count: all.filter(entry.match).length })),
           ]}
         />
       </PageHeader>
       {orders === null ? (
         failed ? (
-          <Notice>Couldn&apos;t load your {title}. The assistant can still look them up.</Notice>
+          <Notice>{currentLocale() === "zh-CN" ? `无法加载你的${t(nouns.title)}，仍可向助手查询。` : `Couldn't load your ${title}. The assistant can still look them up.`}</Notice>
         ) : (
           <Skeleton className="h-[320px]" />
         )
@@ -239,7 +246,7 @@ export function OrdersView({
           </ul>
         </Panel>
       ) : (
-        <Notice>No {title} here.</Notice>
+        <Notice>{currentLocale() === "zh-CN" ? `这里没有${t(nouns.title)}。` : `No ${title} here.`}</Notice>
       )}
     </StorePage>
   );

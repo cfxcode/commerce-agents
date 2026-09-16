@@ -8,6 +8,7 @@ import {
   AskButton,
   Button,
   coverLabel,
+  currentLocale,
   Fact,
   Facts,
   formatDate,
@@ -31,6 +32,7 @@ import {
   Skeleton,
   Thumb,
   titleCase,
+  t,
   useResource,
 } from "web-shared";
 import { api, fetchAlerts, fetchListingDetail, fetchListings } from "@/lib/api";
@@ -52,7 +54,7 @@ function StatusPill({ status }: { status: Listing["status"] }) {
 function ContentCell({ quality }: { quality: Listing["content_quality"] }) {
   if (quality === "poor") return <Pill tone="danger">Poor content</Pill>;
   if (quality === "needs_work") return <Pill tone="warn">Needs work</Pill>;
-  return <span className="text-[12.5px] text-(--ink-soft)">Good</span>;
+  return <span className="text-[12.5px] text-(--ink-soft)">{t("Good")}</span>;
 }
 
 /** Why a listing sorts into the attention group; lower ranks list first. */
@@ -74,7 +76,7 @@ function StockCell({ listing, alert }: { listing: Listing; alert?: InventoryAler
       {low && alert?.days_of_cover != null ? (
         <div className="whitespace-nowrap text-[11.5px] font-medium text-(--ink-soft)">{coverLabel(alert.days_of_cover)}</div>
       ) : soldOut && alert?.sales_last_30d ? (
-        <div className="whitespace-nowrap text-[11.5px] font-medium text-(--ink-soft)">{formatNumber(alert.sales_last_30d)} sold in 30 days</div>
+        <div className="whitespace-nowrap text-[11.5px] font-medium text-(--ink-soft)">{currentLocale() === "zh-CN" ? `30 天售出 ${formatNumber(alert.sales_last_30d)} 件` : `${formatNumber(alert.sales_last_30d)} sold in 30 days`}</div>
       ) : null}
     </div>
   );
@@ -109,11 +111,11 @@ function ListingSheet({
       footer={
         listing ? (
           <>
-            <Button variant="primary" icon="spark" className="flex-1" onClick={() => ask(`Tell me how ${ref} is doing and what you would change.`)}>
+            <Button variant="primary" icon="spark" className="flex-1" onClick={() => ask(currentLocale() === "zh-CN" ? `说明 ${ref} 的表现以及你建议的更改。` : `Tell me how ${ref} is doing and what you would change.`)}>
               Ask about this listing
             </Button>
             {alert?.kind === "low_stock" ? (
-              <Button variant="secondary" onClick={() => ask(`Draft a restock plan for ${ref}.`)}>
+              <Button variant="secondary" onClick={() => ask(currentLocale() === "zh-CN" ? `为 ${ref} 起草补货方案。` : `Draft a restock plan for ${ref}.`)}>
                 Draft restock
               </Button>
             ) : null}
@@ -122,7 +124,7 @@ function ListingSheet({
       }
     >
       {failed ? (
-        <p className="text-[13.5px] text-(--ink-soft)">Couldn&apos;t load this listing.</p>
+        <p className="text-[13.5px] text-(--ink-soft)">{currentLocale() === "zh-CN" ? "无法加载此商品。" : "Couldn't load this listing."}</p>
       ) : !listing ? (
         <>
           <Skeleton className="h-24" />
@@ -138,7 +140,7 @@ function ListingSheet({
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <StatusPill status={listing.status} />
                 {listing.content_quality && listing.content_quality !== "good" ? (
-                  <Pill tone={listing.content_quality === "poor" ? "danger" : "warn"}>Content {listing.content_quality === "poor" ? "is poor" : "needs work"}</Pill>
+                  <Pill tone={listing.content_quality === "poor" ? "danger" : "warn"}>{currentLocale() === "zh-CN" ? (listing.content_quality === "poor" ? "内容质量较差" : "内容需要完善") : `Content ${listing.content_quality === "poor" ? "is poor" : "needs work"}`}</Pill>
                 ) : null}
                 {listing.category ? <Pill>{formatCategoryLabel(listing.category)}</Pill> : null}
               </div>
@@ -161,9 +163,9 @@ function ListingSheet({
             <section>
               <SectionTitle
                 aside={[
-                  pricing.unit_cost != null ? `unit cost ${formatMoney(pricing.unit_cost)}` : "",
-                  pricing.demand_signal ? `demand ${titleCase(pricing.demand_signal).toLowerCase()}` : "",
-                  pricing.last_changed ? `changed ${formatDate(pricing.last_changed)}` : "",
+                  pricing.unit_cost != null ? `${currentLocale() === "zh-CN" ? "单位成本" : "unit cost"} ${formatMoney(pricing.unit_cost)}` : "",
+                  pricing.demand_signal ? `${currentLocale() === "zh-CN" ? "需求" : "demand"} ${titleCase(pricing.demand_signal).toLowerCase()}` : "",
+                  pricing.last_changed ? `${currentLocale() === "zh-CN" ? "更新于" : "changed"} ${formatDate(pricing.last_changed)}` : "",
                 ]
                   .filter(Boolean)
                   .join(" · ")}
@@ -172,7 +174,7 @@ function ListingSheet({
               </SectionTitle>
               {pricing.min_price != null && pricing.max_price != null ? <PriceBand current={pricing.current_price} floor={pricing.min_price} ceiling={pricing.max_price} /> : null}
               {listing.return_rate_pct != null && pricing.margin_pct != null ? (
-                <p className="mt-2 text-[12.5px] tabular-nums text-(--ink-soft)">Return rate {formatRate(listing.return_rate_pct)}</p>
+                <p className="mt-2 text-[12.5px] tabular-nums text-(--ink-soft)">{t("Return rate")} {formatRate(listing.return_rate_pct)}</p>
               ) : null}
             </section>
           ) : null}
@@ -188,7 +190,7 @@ function ListingSheet({
                 ))}
                 <AskButton
                   label="Draft these attributes"
-                  onClick={() => ask(`Draft the missing attributes (${listing.missing_attributes?.join(", ")}) for ${ref}.`)}
+                  onClick={() => ask(currentLocale() === "zh-CN" ? `为 ${ref} 起草缺失属性（${listing.missing_attributes?.join("、")}）。` : `Draft the missing attributes (${listing.missing_attributes?.join(", ")}) for ${ref}.`)}
                 />
               </div>
             </section>
@@ -223,15 +225,15 @@ function ListingSheet({
 function VariantsTable({ variants, onAsk }: { variants: Listing[]; onAsk: (text: string) => void }) {
   return (
     <section>
-      <SectionTitle aside={`${variants.length} variants · priced and stocked per variant`}>Variants</SectionTitle>
+      <SectionTitle aside={currentLocale() === "zh-CN" ? `${variants.length} 个规格 · 按规格定价和管理库存` : `${variants.length} variants · priced and stocked per variant`}>Variants</SectionTitle>
       <div className="overflow-x-auto rounded-[10px] border border-(--line)">
         <table className="w-full border-collapse text-[13px]">
           <thead>
             <tr className="bg-(--ground) text-left text-[11.5px] font-medium uppercase tracking-[0.04em] text-(--ink-soft)">
-              <th className="px-3 py-1.5">Variant</th>
-              <th className="px-3 py-1.5 text-right">Stock</th>
-              <th className="px-3 py-1.5 text-right">Price</th>
-              <th className="px-3 py-1.5">Status</th>
+              <th className="px-3 py-1.5">{t("Variant")}</th>
+              <th className="px-3 py-1.5 text-right">{t("Stock")}</th>
+              <th className="px-3 py-1.5 text-right">{t("Price")}</th>
+              <th className="px-3 py-1.5">{t("Status")}</th>
             </tr>
           </thead>
           <tbody>
@@ -241,7 +243,7 @@ function VariantsTable({ variants, onAsk }: { variants: Listing[]; onAsk: (text:
                   <button
                     type="button"
                     className="text-left text-(--ink) hover:underline"
-                    onClick={() => onAsk(`How is ${variant.title} in ${optionValuesLabel(variant)} (${variant.listing_id}) priced, and would you change it?`)}
+                    onClick={() => onAsk(currentLocale() === "zh-CN" ? `${variant.title} 的 ${optionValuesLabel(variant)} 规格（${variant.listing_id}）如何定价，是否建议调整？` : `How is ${variant.title} in ${optionValuesLabel(variant)} (${variant.listing_id}) priced, and would you change it?`)}
                   >
                     <div className="font-medium">{optionValuesLabel(variant)}</div>
                     <div className="text-[11.5px] tabular-nums text-(--ink-soft)">{variant.listing_id}</div>
@@ -272,7 +274,7 @@ function ListingRow({ listing, alert, onOpen }: { listing: Listing; alert?: Inve
         }
       }}
       tabIndex={0}
-      aria-label={`Open ${listing.title}`}
+      aria-label={currentLocale() === "zh-CN" ? `打开 ${listing.title}` : `Open ${listing.title}`}
       className="cursor-pointer border-t border-(--line) transition-colors hover:bg-(--ground)/70 focus-visible:bg-(--ground)/70 focus-visible:outline-none"
     >
       <td className="py-2 pl-[18px] pr-3">
@@ -283,7 +285,7 @@ function ListingRow({ listing, alert, onOpen }: { listing: Listing; alert?: Inve
             <div className="text-[12px] tabular-nums text-(--ink-soft)">
               {listing.listing_id}
               {hasOptions(listing) ? <span> · {optionSummary(listing)}</span> : null}
-              {alert?.kind === "slow_mover" ? <span> · {INVENTORY_KINDS.slow_mover.label.toLowerCase()}</span> : null}
+              {alert?.kind === "slow_mover" ? <span> · {t(INVENTORY_KINDS.slow_mover.label)}</span> : null}
             </div>
           </div>
         </div>
@@ -309,12 +311,12 @@ function ListingTable({ listings, alerts, onOpen }: { listings: Listing[]; alert
       <table className="w-full border-collapse">
         <thead>
           <tr className="text-left text-[12px] font-semibold text-(--ink-soft)">
-            <th className="py-2.5 pl-[18px] pr-3 font-semibold">Listing</th>
-            <th className="hidden px-3 py-2.5 font-semibold @4xl:table-cell">Category</th>
-            <th className="px-3 py-2.5 text-right font-semibold">Stock</th>
-            <th className="px-3 py-2.5 text-right font-semibold">Price</th>
-            <th className="px-3 py-2.5 font-semibold">Status</th>
-            <th className="hidden py-2.5 pl-3 pr-[18px] font-semibold @2xl:table-cell">Content</th>
+            <th className="py-2.5 pl-[18px] pr-3 font-semibold">{t("Listing")}</th>
+            <th className="hidden px-3 py-2.5 font-semibold @4xl:table-cell">{t("Category")}</th>
+            <th className="px-3 py-2.5 text-right font-semibold">{t("Stock")}</th>
+            <th className="px-3 py-2.5 text-right font-semibold">{t("Price")}</th>
+            <th className="px-3 py-2.5 font-semibold">{t("Status")}</th>
+            <th className="hidden py-2.5 pl-3 pr-[18px] font-semibold @2xl:table-cell">{t("Content")}</th>
           </tr>
         </thead>
         <tbody>
@@ -375,7 +377,7 @@ export default function CatalogView({ refreshKey, onAskAssistant }: { refreshKey
   }, [listings, alerts, query, filter]);
 
   const summary = listings
-    ? [
+    ? currentLocale() === "zh-CN" ? `${formatNumber(total ?? listings.length)} 个商品${counts.low_stock ? ` · ${counts.low_stock} 个低库存或缺货` : ""}${counts.content ? ` · ${counts.content} 个需完善内容` : ""}` : [
         total != null && total > listings.length ? `${formatNumber(listings.length)} of ${formatNumber(total)} listings` : `${formatNumber(total ?? listings.length)} listings`,
         counts.low_stock ? `${counts.low_stock} low or out of stock` : "",
         counts.content ? `${counts.content} need content work` : "",
@@ -387,13 +389,13 @@ export default function CatalogView({ refreshKey, onAskAssistant }: { refreshKey
   return (
     <div className="ac-reveal flex flex-col gap-4">
       <PageHeader title="Catalog" subtitle={summary}>
-        <Button variant="secondary" icon="spark" onClick={() => onAskAssistant("Which listings need the most work right now, and why?")}>
+        <Button variant="secondary" icon="spark" onClick={() => onAskAssistant(currentLocale() === "zh-CN" ? "哪些商品目前最需要完善，原因是什么？" : "Which listings need the most work right now, and why?")}>
           Ask about the catalog
         </Button>
       </PageHeader>
 
       {failed && !listings ? (
-        <Notice>The merchant API isn&apos;t reachable, so listings can&apos;t load.</Notice>
+        <Notice>{currentLocale() === "zh-CN" ? "无法连接商家 API，因此无法加载商品。" : "The merchant API isn't reachable, so listings can't load."}</Notice>
       ) : !listings ? (
         <Skeleton className="h-96" />
       ) : (
@@ -419,7 +421,7 @@ export default function CatalogView({ refreshKey, onAskAssistant }: { refreshKey
           ) : null}
 
           {attention.length ? (
-            <Panel title="Needs attention" subtitle={`${attention.length} · sold out and low stock first`}>
+            <Panel title="Needs attention" subtitle={currentLocale() === "zh-CN" ? `${attention.length} 个 · 优先显示缺货和低库存` : `${attention.length} · sold out and low stock first`}>
               <ListingTable listings={attention} alerts={alerts} onOpen={setOpenListing} />
             </Panel>
           ) : null}

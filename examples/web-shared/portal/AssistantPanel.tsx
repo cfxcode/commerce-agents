@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { ActivityButton } from "../ActivityButton";
 import { Composer, type Prefill } from "../Composer";
 import { Icon } from "../icons";
+import { t } from "../i18n";
 import { useStickToBottom } from "../scroll";
 import { LatestPill, Transcript, type TranscriptProps } from "../Transcript";
 import type { AgentTurn } from "../turn";
@@ -74,18 +75,18 @@ export function AssistantPanel({
         </span>
         <div className="min-w-0 flex-1">
           <div className="truncate text-[14px] font-semibold leading-tight text-(--ink)">{copy.title}</div>
-          <div className="truncate text-[11.5px] text-(--ink-soft)">You approve every change</div>
+          <div className="truncate text-[11.5px] text-(--ink-soft)">{t("You approve every change")}</div>
         </div>
         <ActivityButton streaming={chat.streaming} newMemoryCount={newMemoryCount} onClick={onOpenActivity} />
         {onToggleFullscreen ? (
           <IconButton
             icon={fullscreen ? "collapse" : "expand"}
-            label={fullscreen ? "Exit full screen" : "Full screen"}
+            label={t(fullscreen ? "Exit full screen" : "Full screen")}
             onClick={onToggleFullscreen}
             className="hidden lg:grid"
           />
         ) : null}
-        <IconButton icon="x" label="Hide assistant" onClick={onClose} />
+        <IconButton icon="x" label={t("Hide assistant")} onClick={onClose} />
       </div>
 
       <div className="relative min-h-0 flex-1">

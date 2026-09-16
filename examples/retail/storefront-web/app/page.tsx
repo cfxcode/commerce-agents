@@ -4,7 +4,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { type AgentEvent, formatMoney, OrdersView, plural, StoreShell, type StoreView, upcoming, useAgentTurn, useResource, useSession } from "web-shared";
+import { type AgentEvent, formatMoney, LanguageSwitcher, OrdersView, plural, StoreShell, t, type StoreView, upcoming, useAgentTurn, useLocale, useResource, useSession } from "web-shared";
 import CartPanel from "@/components/CartPanel";
 import Chat from "@/components/Chat";
 import HomeView from "@/components/views/HomeView";
@@ -22,12 +22,14 @@ function Wordmark() {
       <span aria-hidden className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-(--ink) text-[15px] font-bold text-(--surface)">
         A
       </span>
-      <span className="text-[17px] font-bold tracking-[-0.02em] text-(--ink)">ACME</span>
+      <span className="hidden text-[17px] font-bold tracking-[-0.02em] text-(--ink) sm:inline">ACME</span>
     </span>
   );
 }
 
 export default function StorefrontPage() {
+  const { locale } = useLocale();
+  useEffect(() => { document.title = locale === "zh-CN" ? "ACME 商城" : "ACME"; }, [locale]);
   const session = useSession(api);
   const [view, setView] = useState<View>("assistant");
   const [cart, setCart] = useState<CartPayload | null>(null);
@@ -54,31 +56,33 @@ export default function StorefrontPage() {
 
   useEffect(() => {
     if (session.sessionId) void api.fetchCart<CartPayload>().then((next) => next && setCart(next));
-  }, [session.sessionId]);
+  }, [session.sessionId, locale]);
 
   const late = orders?.filter((order) => order.status === "delayed").length ?? 0;
   const views: StoreView<View>[] = [
-    { id: "assistant", label: "Assistant", icon: "spark" },
-    { id: "orders", label: "Orders", icon: "box", attention: late ? { count: late, label: `${late} delayed` } : null },
+    { id: "assistant", label: t("Assistant"), icon: "spark" },
+    { id: "orders", label: t("Orders"), icon: "box", attention: late ? { count: late, label: `${late} ${t("Delayed")}` } : null },
   ];
-  const shopper = session.shopper ?? { name: "Guest" };
+  const shopper = session.shopper ?? { name: t("Guest") };
   const count = cart?.item_count ?? 0;
 
   return (
-    <StoreShell
+    <>
+      <StoreShell
+      languageControl={<LanguageSwitcher />}
       brand={<Wordmark />}
       views={views}
       view={view}
       onViewChange={setView}
       chat={chat}
       api={api}
-      assistantName={ASSISTANT}
+      assistantName={t(ASSISTANT)}
       shopper={shopper}
-      bag={{ label: "Cart", count, noun: "item", figure: count ? formatMoney(cart?.subtotal ?? 0, cart?.currency) : null }}
+      bag={{ label: t("Cart"), count, noun: t("item"), figure: count ? formatMoney(cart?.subtotal ?? 0, cart?.currency) : null }}
       panel={<CartPanel cart={cart} checkoutStaged={checkoutStaged} />}
       panelOpen={panelOpen}
       onPanelOpenChange={setPanelOpen}
-      placeholder={view === "orders" ? "Ask about an order, a return, a delivery…" : "Ask about a product, a project, an order…"}
+      placeholder={view === "orders" ? t("Ask about an order, a return, a delivery…") : t("Ask about a product, a project, an order…")}
     >
       {/* The conversation stays mounted under the other view so its cards keep their state. */}
       <div className={view === "assistant" ? "h-full" : "hidden"}>
@@ -91,7 +95,9 @@ export default function StorefrontPage() {
           nouns={NOUNS}
           subtitle={
             orders
-              ? late
+              ? locale === "zh-CN"
+                ? late ? `${late} 个订单延迟。可以询问原因，或咨询已送达商品的退货。` : `${upcoming(orders).length} 个订单配送中。可以询问任意订单，或咨询已送达商品的退货。`
+                : late
                 ? `${plural(late, "order")} running late. Ask why, or ask about a return on anything delivered.`
                 : `${plural(upcoming(orders).length, "order")} on the way. Ask about any of them, or about a return on anything delivered.`
               : undefined
@@ -99,6 +105,7 @@ export default function StorefrontPage() {
           thumb={(order) => <OrderThumb order={order} />}
         />
       ) : null}
-    </StoreShell>
+      </StoreShell>
+    </>
   );
 }

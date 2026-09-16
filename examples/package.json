@@ -7,6 +7,7 @@
     "*/merchant-web"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present"
+    "build": "npm run build --workspaces --if-present",
+    "check:i18n": "node ../scripts/check_retail_i18n.cjs"
   }
 }
