@@ -9,6 +9,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from .models import Blocked, Guidance
+from .semantic_models import canonical_json
 
 GUIDANCE_SYSTEM = """Return only a JSON guidance object with immediate_goal,
 recommended_action_refs, required_evidence_ids, unknowns, cautions, used_edge_ids,
@@ -90,7 +91,16 @@ async def model_json(
             model=model,
             max_tokens=max_tokens,
             system=system,
-            messages=[{"role": "user", "content": json.dumps(data, ensure_ascii=False)}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": (
+                        canonical_json(data)
+                        if "semantic_definitions" in data
+                        else json.dumps(data, ensure_ascii=False)
+                    ),
+                }
+            ],
         )
     body = "".join(block.text for block in response.content if getattr(block, "type", "") == "text")
     if body.startswith("```"):
@@ -118,13 +128,16 @@ async def model_json(
 
 
 class GuidanceProvider:
+    def __init__(self, *, system: str | None = None):
+        self.system = GUIDANCE_SYSTEM if system is None else system
+
     async def build(
         self, client: Any, model: str, data: dict, config: Any
     ) -> tuple[Guidance, dict]:
         raw, usage = await model_json(
             client,
             model=model,
-            system=GUIDANCE_SYSTEM,
+            system=self.system,
             data=data,
             max_tokens=config.guidance_max_tokens,
             timeout=config.guidance_timeout_s,

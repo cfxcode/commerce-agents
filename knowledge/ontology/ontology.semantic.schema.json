@@ -1,0 +1,586 @@
+{
+  "$defs": {
+    "ActionDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "tool_binding": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Tool Binding",
+          "type": "string"
+        },
+        "effect": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Effect",
+          "type": "string"
+        },
+        "side_effect": {
+          "title": "Side Effect",
+          "type": "boolean"
+        },
+        "allowed_origins": {
+          "items": {
+            "enum": [
+              "agent",
+              "host"
+            ],
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 1,
+          "title": "Allowed Origins",
+          "type": "array"
+        },
+        "checks": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.:-]+$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Checks",
+          "type": "array"
+        },
+        "description": {
+          "maxLength": 600,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "semantic_refs": {
+          "$ref": "#/$defs/SemanticRefs"
+        }
+      },
+      "required": [
+        "id",
+        "tool_binding",
+        "effect",
+        "side_effect",
+        "allowed_origins",
+        "checks",
+        "description",
+        "semantic_refs"
+      ],
+      "title": "ActionDefinition",
+      "type": "object"
+    },
+    "CheckDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 600,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "implementation": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Implementation",
+          "type": "string"
+        },
+        "immutable_to_refiner": {
+          "const": true,
+          "title": "Immutable To Refiner",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "description",
+        "implementation",
+        "immutable_to_refiner"
+      ],
+      "title": "CheckDefinition",
+      "type": "object"
+    },
+    "EntityDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 600,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "subtype_of": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Subtype Of"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        },
+        "key": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Key"
+        },
+        "trusted_origin": {
+          "anyOf": [
+            {
+              "const": "host",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Trusted Origin"
+        },
+        "classification_rule": {
+          "anyOf": [
+            {
+              "enum": [
+                "nonempty_options",
+                "not_family",
+                "nonempty_variant_of_and_not_family"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Classification Rule"
+        }
+      },
+      "required": [
+        "id",
+        "description"
+      ],
+      "title": "EntityDefinition",
+      "type": "object"
+    },
+    "PropertyDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "owner_ref": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Owner Ref",
+          "type": "string"
+        },
+        "source_field": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+          "title": "Source Field",
+          "type": "string"
+        },
+        "value_kind": {
+          "enum": [
+            "integer",
+            "number",
+            "string",
+            "boolean",
+            "object",
+            "array",
+            "datetime"
+          ],
+          "title": "Value Kind",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 600,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "maxLength": 40,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "id",
+        "owner_ref",
+        "source_field",
+        "value_kind",
+        "description"
+      ],
+      "title": "PropertyDefinition",
+      "type": "object"
+    },
+    "RelationDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 600,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "domain": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.:-]+$",
+            "type": "string"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "title": "Domain",
+          "type": "array"
+        },
+        "range": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.:-]+$",
+            "type": "string"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "title": "Range",
+          "type": "array"
+        },
+        "max_targets": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Targets"
+        }
+      },
+      "required": [
+        "id",
+        "description",
+        "domain",
+        "range"
+      ],
+      "title": "RelationDefinition",
+      "type": "object"
+    },
+    "SemanticRefGroup": {
+      "additionalProperties": false,
+      "properties": {
+        "entities": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.:-]+$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Entities",
+          "type": "array"
+        },
+        "relations": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.:-]+$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Relations",
+          "type": "array"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.:-]+$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Properties"
+        }
+      },
+      "required": [
+        "entities",
+        "relations",
+        "properties"
+      ],
+      "title": "SemanticRefGroup",
+      "type": "object"
+    },
+    "SemanticRefs": {
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "$ref": "#/$defs/SemanticRefGroup"
+        },
+        "optional": {
+          "$ref": "#/$defs/SemanticRefGroup"
+        }
+      },
+      "required": [
+        "required",
+        "optional"
+      ],
+      "title": "SemanticRefs",
+      "type": "object"
+    },
+    "StateDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 600,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "semantic_refs": {
+          "$ref": "#/$defs/SemanticRefs"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "description",
+        "semantic_refs"
+      ],
+      "title": "StateDefinition",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "semantic_schema_version": {
+      "const": "1.0",
+      "title": "Semantic Schema Version",
+      "type": "string"
+    },
+    "ontology_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Ontology Id",
+      "type": "string"
+    },
+    "version": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Version",
+      "type": "string"
+    },
+    "status": {
+      "title": "Status",
+      "type": "string"
+    },
+    "upstream_commit": {
+      "title": "Upstream Commit",
+      "type": "string"
+    },
+    "scope": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Scope",
+      "type": "object"
+    },
+    "identity_key": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Identity Key",
+      "type": "array"
+    },
+    "value_statuses": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Value Statuses",
+      "type": "array"
+    },
+    "change_statuses": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Change Statuses",
+      "type": "array"
+    },
+    "entities": {
+      "items": {
+        "$ref": "#/$defs/EntityDefinition"
+      },
+      "maxItems": 2048,
+      "minItems": 1,
+      "title": "Entities",
+      "type": "array"
+    },
+    "relations": {
+      "items": {
+        "$ref": "#/$defs/RelationDefinition"
+      },
+      "maxItems": 2048,
+      "title": "Relations",
+      "type": "array"
+    },
+    "actions": {
+      "items": {
+        "$ref": "#/$defs/ActionDefinition"
+      },
+      "maxItems": 2048,
+      "minItems": 1,
+      "title": "Actions",
+      "type": "array"
+    },
+    "states": {
+      "items": {
+        "$ref": "#/$defs/StateDefinition"
+      },
+      "maxItems": 2048,
+      "minItems": 1,
+      "title": "States",
+      "type": "array"
+    },
+    "properties": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PropertyDefinition"
+      },
+      "maxItems": 2048,
+      "title": "Properties"
+    },
+    "check_catalog": {
+      "items": {
+        "$ref": "#/$defs/CheckDefinition"
+      },
+      "maxItems": 2048,
+      "title": "Check Catalog",
+      "type": "array"
+    },
+    "invariants": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Invariants",
+      "type": "array"
+    },
+    "restock_formula": {
+      "additionalProperties": true,
+      "title": "Restock Formula",
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "semantic_schema_version",
+    "ontology_id",
+    "version",
+    "status",
+    "upstream_commit",
+    "scope",
+    "identity_key",
+    "value_statuses",
+    "change_statuses",
+    "entities",
+    "relations",
+    "actions",
+    "states",
+    "properties",
+    "check_catalog",
+    "invariants",
+    "restock_formula"
+  ],
+  "title": "SemanticOntology",
+  "type": "object"
+}

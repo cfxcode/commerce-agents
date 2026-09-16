@@ -5,6 +5,9 @@ Retail operational ontology, deterministic restock plans, procedural guidance, a
 | Module | Responsibility |
 |---|---|
 | `config.py`, `models.py` | Independent settings and typed domain contracts |
+| `semantic_models.py`, `semantic_registry.py` | Strict semantic metadata, duplicate-key rejection and typed reference validation |
+| `semantic_context.py`, `semantic_runtime.py` | Bounded definition closure, dependency traces and opt-in per-round integration |
+| `semantic_release.py`, `semantic_evaluation.py`, `semantic_cli.py` | Explicit knowledge sources, effective prompt binding, comparable reports and offline inspection |
 | `ontology.py` | Object classification, relationships, observations, pending snapshots and exact cover-days arithmetic |
 | `execution.py` | Trusted task context, host approvals, plan binding, per-round guidance and audit integration |
 | `procedural.py`, `guidance.py` | Validated graphs, registered three-valued predicates, directed retrieval and tool-free guidance |
@@ -16,3 +19,5 @@ Retail operational ontology, deterministic restock plans, procedural guidance, a
 The retail integration supplies `ReasoningRetailMerchant`, which commits the simulated inventory, shared storefront catalog, change ledger and effect receipt together within one event-loop critical section. Other deployments retain their existing executor by default. Domain models and graph operations have no model-provider imports.
 
 Run `python -m pytest commerce-reasoning/tests`. See [configuration and operation](../docs/ontology-pg/README.md) and [the original specification](../commerce-agents_Ontology_PG_技术设计与实施文档.md).
+
+Opt-in semantic closure and reviewed publication: [implementation and commands](../docs/ontology-pg/semantic-context.md). Default legacy behavior and existing releases remain unchanged.

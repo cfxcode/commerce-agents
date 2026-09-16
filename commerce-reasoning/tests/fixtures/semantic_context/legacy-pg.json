@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "graph_id": "inventory_restock",
-  "version": "1.0.1",
-  "ontology_version": "1.1.0",
+  "version": "1.0.0",
+  "ontology_version": "1.0.0",
   "entry_node": "START",
   "metadata": {
     "status": "manual_seed",

@@ -1,0 +1,5 @@
+{
+  "base_commit": "adf23373c9fed7d0413fd996fe2e065322b00996",
+  "capture": "Unmodified base runtime, fake client, PYTHONHASHSEED=0, COMMERCE_MODEL=claude-opus-5; no fields normalized or removed.",
+  "sha256": "0c02fd2ff1250a2eb489892dfc7f4edb06e456374db050b144380f47f0c51351"
+}

@@ -115,3 +115,9 @@ cd examples && npm run build
 ```
 
 实现以当前项目的中英文改造提交为基线。原设计文档和参考目录保留，不会把 `TO_IMPLEMENT` 标记当成执行检查。已测结果、故障与限制记录在同目录的实施报告中。
+
+## 本体语义依赖扩展
+
+新增 `semantic_context_mode: legacy | closure`，默认仍为 legacy。Closure 根据当前局部 PG 的动作／状态和已确认目标类型补全定义，不替代现有事实或执行检查。新版受审查发布才可在正常 Runtime 开启 closure；旧 active 不会被工作区覆盖。
+
+实现、离线检查、配对评测和发布操作见 [semantic-context.md](semantic-context.md)。本次没有运行付费模型对照或切换 active，不能据此声称成功率提升。

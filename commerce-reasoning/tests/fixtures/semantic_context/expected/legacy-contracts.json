@@ -1,0 +1,137 @@
+{
+  "ReadInventoryAlerts": {
+    "id": "ReadInventoryAlerts",
+    "tool_binding": "get_inventory_alerts",
+    "effect": "observe_alerts",
+    "side_effect": false,
+    "allowed_origins": [
+      "agent",
+      "host"
+    ],
+    "checks": [
+      "TENANT_SCOPE"
+    ]
+  },
+  "ReadListing": {
+    "id": "ReadListing",
+    "tool_binding": "get_listing",
+    "effect": "observe_full_listing_and_provenance",
+    "side_effect": false,
+    "allowed_origins": [
+      "agent",
+      "host"
+    ],
+    "checks": [
+      "TENANT_SCOPE"
+    ]
+  },
+  "ReadPendingChanges": {
+    "id": "ReadPendingChanges",
+    "tool_binding": "get_pending_changes",
+    "effect": "replace_current_pending_snapshot",
+    "side_effect": false,
+    "allowed_origins": [
+      "agent",
+      "host"
+    ],
+    "checks": [
+      "TENANT_SCOPE",
+      "COVERAGE_CAPTURE"
+    ]
+  },
+  "CalculateRestockPlan": {
+    "id": "CalculateRestockPlan",
+    "tool_binding": "calculate_restock_plan",
+    "effect": "create_auditable_plan_no_inventory_write",
+    "side_effect": false,
+    "allowed_origins": [
+      "agent",
+      "host"
+    ],
+    "checks": [
+      "TENANT_SCOPE",
+      "VALID_TARGET",
+      "FRESH_INPUTS",
+      "COMPLETE_PENDING_SNAPSHOT"
+    ]
+  },
+  "StageRestock": {
+    "id": "StageRestock",
+    "tool_binding": "stage_inventory_action",
+    "effect": "create_staged_change_only",
+    "side_effect": true,
+    "allowed_origins": [
+      "agent",
+      "host"
+    ],
+    "checks": [
+      "TENANT_SCOPE",
+      "UPSTREAM_PROVENANCE",
+      "VALID_TARGET",
+      "PLAN_MATCH",
+      "PENDING_CONFLICT_ATOMIC",
+      "UPSTREAM_GUARDRAILS"
+    ]
+  },
+  "PreviewChange": {
+    "id": "PreviewChange",
+    "tool_binding": "present_change_preview",
+    "effect": "show_existing_change_no_authorization",
+    "side_effect": false,
+    "allowed_origins": [
+      "agent",
+      "host"
+    ],
+    "checks": [
+      "TENANT_SCOPE",
+      "UPSTREAM_PROVENANCE"
+    ]
+  },
+  "ApplyApprovedChange": {
+    "id": "ApplyApprovedChange",
+    "tool_binding": "apply_change",
+    "effect": "apply_approved_delta_then_verify",
+    "side_effect": true,
+    "allowed_origins": [
+      "host"
+    ],
+    "checks": [
+      "TENANT_SCOPE",
+      "HOST_APPROVAL",
+      "APPROVAL_DIGEST",
+      "UPSTREAM_GUARDRAILS",
+      "CURRENT_REVISION",
+      "IDEMPOTENCY",
+      "ATOMIC_COMMIT"
+    ]
+  },
+  "DiscardChange": {
+    "id": "DiscardChange",
+    "tool_binding": "discard_change",
+    "effect": "discard_staged_change_no_stock_rollback",
+    "side_effect": true,
+    "allowed_origins": [
+      "agent",
+      "host"
+    ],
+    "checks": [
+      "TENANT_SCOPE",
+      "UPSTREAM_PROVENANCE",
+      "STAGED_STATUS"
+    ]
+  },
+  "VerifyAppliedChange": {
+    "id": "VerifyAppliedChange",
+    "tool_binding": "get_listing",
+    "effect": "observe_effect_no_write",
+    "side_effect": false,
+    "allowed_origins": [
+      "agent",
+      "host"
+    ],
+    "checks": [
+      "TENANT_SCOPE",
+      "ACTION_RECEIPT"
+    ]
+  }
+}

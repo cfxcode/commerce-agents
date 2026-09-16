@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { PageHeader, Panel, useLocale } from "web-shared";
 import { KNOWLEDGE_EN } from "@/lib/reasoning-copy";
 import { api } from "@/lib/api";
+import SemanticContextPanel, { type SemanticSnapshot } from "./SemanticContextPanel";
 
 type Task = { task_id: string; target: string | null; target_days: number | null; phase: string; revision: number; release_id: string; updated_at: string; unknowns: string[] };
 type Node = { id: string; kind: string; label: string; action_ref?: string; state_ref?: string };
@@ -12,6 +13,9 @@ type Guidance = { immediate_goal: string; recommended_action_refs: string[]; unk
 type Event = { event_id: string; event_type: string; timestamp: string; action_ref?: string; status: string; error_code?: string; duration_ms: number; evidence_refs: string[]; input_tokens?: number; output_tokens?: number; role?: string; failure_kind?: string; failure_reason?: string; timeout_s?: number; guidance_output?: Guidance };
 type Detail = {
   task: Task; variant: string;
+  semantic_context?: SemanticSnapshot | null;
+  semantic_mode?: { configured: string; effective: string };
+  knowledge_source?: string;
   view: { listing: { kind: string } | null; observations: Record<string, { value: unknown; value_status: string; observation_id: string; source_tool: string; observed_at: string; source_revision: number | null }>; pending_present: boolean | null };
   plan: { stock: number; sales: number; target_days: number; target_stock: number; quantity: number; status: string; note: string } | null;
   guidance: { guidance: Guidance; subgraph: { nodes: Node[]; edges: Edge[]; omitted_count: number } } | null;
@@ -134,6 +138,7 @@ export default function ReasoningView({ refreshKey, sessionId }: { refreshKey: n
             <Panel><div className="p-4"><h2 className="mb-3 font-semibold">{text("Evidence", "事实证据")}</h2><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="text-(--ink-soft)"><th className="py-2">{text("Field", "字段")}</th><th>{text("Value", "值")}</th><th>{text("Validity", "有效性")}</th></tr></thead><tbody>{Object.entries(detail.view.observations).map(([key, fact]) => <tr key={key} className="border-t border-(--line)"><td className="py-2 font-mono text-xs" title={`${fact.source_tool} · ${fact.observation_id}`}>{key}</td><td className="max-w-40 break-words">{fact.value === null ? "—" : typeof fact.value === "object" ? JSON.stringify(fact.value) : String(fact.value)}</td><td>{labels[fact.value_status] ?? fact.value_status}</td></tr>)}</tbody></table></div><p className="mt-3 text-sm">{text("Pending conflict: ", "待处理冲突：")}{detail.view.pending_present === null ? text("Unknown", "未知") : detail.view.pending_present ? text("Present", "存在") : text("None in complete snapshot", "完整快照中不存在")}</p></div></Panel>
             {detail.plan ? <Panel><div className="p-4"><h2 className="font-semibold">{text("Restock calculation", "补货计算")}</h2><p className="mt-2 font-mono">max(0, ceil({detail.plan.sales} × {detail.plan.target_days} / 30) − {detail.plan.stock}) = {detail.plan.quantity}</p><p className="mt-2 text-sm text-(--ink-soft)">{labels[detail.plan.status] ?? detail.plan.status} · {text("A plan is not approval.", "计算方案不代表批准。")}</p></div></Panel> : null}
             <GuidancePanel detail={detail} locale={locale} />
+            <SemanticContextPanel locale={locale} snapshot={detail.semantic_context} mode={detail.semantic_mode} source={detail.knowledge_source} events={detail.events} />
           </div>
         </div>
         <Panel><div id="reasoning-execution-history" className="p-4"><h2 className="mb-3 font-semibold">{text("Execution history", "执行记录")}</h2><ol className="divide-y divide-(--line)">{detail.events.filter((event) => event.event_type !== "request_composed").slice(-60).reverse().map((event) => <li key={event.event_id} className="py-2"><button type="button" aria-expanded={expanded === event.event_id} onClick={() => setExpanded(expanded === event.event_id ? null : event.event_id)} className="flex w-full flex-wrap gap-x-3 text-left text-xs"><time className="text-(--ink-soft)">{new Date(event.timestamp).toLocaleTimeString(locale)}</time><span className="font-mono">{event.event_type}</span><span className="font-mono">{event.action_ref}</span><span className="ml-auto">{event.error_code ?? event.status} · {event.duration_ms} ms</span></button>{expanded === event.event_id ? <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap rounded bg-(--ground) p-3 text-xs">{JSON.stringify(event, null, 2)}</pre> : null}</li>)}</ol></div></Panel>

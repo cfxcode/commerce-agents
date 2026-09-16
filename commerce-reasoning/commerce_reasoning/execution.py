@@ -16,7 +16,7 @@ from merchant_agent.executor import MerchantToolExecutor
 from merchant_agent.tools.registry import build_tools
 
 from .config import ReasoningConfig
-from .guidance import GuidanceProvider, failure_details, model_json
+from .guidance import GUIDANCE_SYSTEM, GuidanceProvider, failure_details, model_json
 from .models import (
     ApprovalRecord,
     Blocked,
@@ -30,6 +30,14 @@ from .models import (
 )
 from .ontology import ObservationAdapter, calculate_plan
 from .procedural import ProcedureLocator, SubgraphRetriever, load_knowledge
+from .semantic_models import BUILDER_VERSION, SemanticError
+from .semantic_release import (
+    effective_prompts,
+    load_effective_prompts,
+    resolve_knowledge,
+    validate_loaded_knowledge,
+)
+from .semantic_runtime import compose_semantics, input_bytes
 from .storage import Store
 
 ACTION_MAP = {
@@ -81,21 +89,35 @@ class MerchantExecutionService:
         candidate_mode: bool = False,
     ):
         self.backend, self.root, self.clock = backend, root, clock
-        self.config = config or ReasoningConfig()
+        self.config = (config or ReasoningConfig()).validate_effective()
         self.store = store or Store(str(root / self.config.audit_store))
-        release = None
-        load_config = self.config
-        if self.config.enabled and not candidate_mode:
-            from .evolution import verify_release
-
-            release = verify_release(root, root / self.config.release_manifest)
-            load_config = self.config.model_copy(update=release["knowledge_paths"])
+        self.knowledge_source = (
+            "published" if self.config.enabled and not candidate_mode else "working"
+        )
+        load_config, release = resolve_knowledge(root, self.config, source=self.knowledge_source)
+        self.loaded_config = load_config
         self.registry, self.graph = load_knowledge(root, load_config)
+        validate_loaded_knowledge(self.registry, self.graph, release)
         self.adapter = ObservationAdapter(self.store, self.registry, self.config.observation_ttl_s)
-        self.guidance = GuidanceProvider()
+        guidance_system, self.solver_notice = load_effective_prompts(
+            root, release, guidance=GUIDANCE_SYSTEM, solver=SOLVER_NOTICE
+        )
+        self.guidance = GuidanceProvider(system=guidance_system)
+        self.effective_prompt_identity = effective_prompts(guidance_system, self.solver_notice)
         self.lock = asyncio.Lock()
         self.release_id = "development"
         self.knowledge_hash = digest([self.registry.content_hash, self.graph.content_hash])
+        if self.config.effective_semantic_mode == "closure" or (
+            release and release.get("release_kind") == "semantic_extension"
+        ):
+            self.knowledge_hash = digest(
+                [
+                    self.knowledge_hash,
+                    self.registry.validate_semantic_refs().schema_hash,
+                    BUILDER_VERSION,
+                    self.effective_prompt_identity["combined_hash"],
+                ]
+            )
         self.config_hash = digest(self.config)
         self.candidate_mode = candidate_mode
         if release:
@@ -330,6 +352,7 @@ class MerchantExecutionService:
         if not task or task.intent == "unrelated":
             return messages
         self.store.delete("guidance", task.merchant_id, task.task_id)
+        self.store.delete("semantic_context", task.merchant_id, task.task_id)
         view = self.adapter.view(task, self.clock())
         plan = self.current_plan(task)
         # Minimal task input is common to every experimental group.
@@ -371,13 +394,18 @@ class MerchantExecutionService:
             node, fallback = ProcedureLocator.locate(task, self.graph)
             guidance_started = time.monotonic()
             data = None
+            model_requested = False
             try:
                 subgraph = SubgraphRetriever().retrieve(
                     self.graph,
                     node,
                     context,
                     hops=self.config.hops,
-                    budget=self.config.context_budget_tokens * 2,
+                    budget=(
+                        self.config.pg_budget_bytes
+                        if self.config.effective_semantic_mode == "closure"
+                        else self.config.context_budget_tokens * 2
+                    ),
                     full=fallback,
                 )
                 enabled_tools = {
@@ -392,11 +420,41 @@ class MerchantExecutionService:
                     if self.registry.actions[a]["tool_binding"] in enabled_tools
                     and "agent" in self.registry.actions[a]["allowed_origins"]
                 ]
+                semantic_started = time.monotonic()
+                semantic = compose_semantics(self.registry, subgraph, view, self.config)
+                if semantic.bundle is not None:
+                    bundle = semantic.bundle
+                    self.store.put(
+                        "semantic_context",
+                        task.merchant_id,
+                        task.task_id,
+                        {
+                            "turn_id": task.turn_id,
+                            "public": bundle.public,
+                            "diagnostics": bundle.diagnostics,
+                            "content_hash": bundle.content_hash,
+                        },
+                    )
+                    # Full static dependency paths live only in the scoped sidecar;
+                    # do not leak PG topology through T's model input.
+                    summary = {
+                        k: v for k, v in bundle.diagnostics.items() if k != "dependency_paths"
+                    }
+                    self.event(
+                        task,
+                        "semantic_context_built",
+                        role="semantic",
+                        **summary,
+                        content_hash=bundle.content_hash,
+                        duration_ms=round((time.monotonic() - semantic_started) * 1000),
+                        model_requested=False,
+                        cache_hit=False,
+                    )
                 data = {
                     **payload,
                     "response_language": session.response_language,
                     "enabled_actions": enabled,
-                    "action_contracts": {a: self.registry.contract(a) for a in sorted(actions)},
+                    **semantic.fields,
                     "evidence_ids": [o["observation_id"] for o in view["observations"].values()],
                     "edge_ids": [e["id"] for e in subgraph["edges"]],
                     "recent_events": [
@@ -418,13 +476,17 @@ class MerchantExecutionService:
                 else:
                     data["subgraph"] = subgraph
                 # Raw UI text, descriptions and reviews never enter this payload.
-                if (
-                    len(json.dumps(data, ensure_ascii=False).encode())
-                    > self.config.context_budget_tokens * 3
-                ):
-                    raise Blocked(
-                        "CONTEXT_BUDGET", "The required guidance context exceeds the budget."
-                    )
+                payload_size = input_bytes(
+                    data, canonical=self.config.effective_semantic_mode == "closure"
+                )
+                payload_limit = (
+                    self.config.guidance_input_budget_bytes
+                    if self.config.effective_semantic_mode == "closure"
+                    else self.config.context_budget_tokens * 3
+                )
+                if payload_size > payload_limit:
+                    raise SemanticError("SEMANTIC_BUDGET_EXCEEDED", "guidance_input_budget_bytes")
+                model_requested = True
                 guidance, usage = await self.guidance.build(
                     client, self.config.guidance_model or agent_config.model, data, self.config
                 )
@@ -444,6 +506,9 @@ class MerchantExecutionService:
                     "guidance_generated",
                     role="guidance",
                     **usage,
+                    model_requested=True,
+                    guidance_input_bytes=payload_size,
+                    semantic_context_mode=self.config.effective_semantic_mode,
                     locator_fallback=fallback,
                     used_edge_ids=guidance.used_edge_ids,
                     recommended_action_refs=guidance.recommended_action_refs,
@@ -451,15 +516,37 @@ class MerchantExecutionService:
                     guidance_output=guidance.model_dump(mode="json"),
                 )
             except Exception as error:
-                code = "GUIDANCE_TIMEOUT" if isinstance(error, TimeoutError) else "INVALID_GUIDANCE"
-                diagnostics = failure_details(error)
-                usage = getattr(error, "model_usage", None) or {"usage_known": False}
+                code = (
+                    error.code
+                    if isinstance(error, SemanticError)
+                    else "GUIDANCE_TIMEOUT"
+                    if isinstance(error, TimeoutError)
+                    else "INVALID_GUIDANCE"
+                )
+                diagnostics = (
+                    failure_details(error)
+                    if model_requested
+                    else {
+                        "failure_kind": "semantic_context"
+                        if isinstance(error, SemanticError)
+                        else "context_construction",
+                        "failure_reason": "Context construction failed before any guidance model request.",
+                        "field": error.path if isinstance(error, SemanticError) else None,
+                    }
+                )
+                usage = (
+                    (getattr(error, "model_usage", None) or {"usage_known": False})
+                    if model_requested
+                    else {}
+                )
                 event = self.event(
                     task,
-                    "guidance_failed",
+                    "guidance_failed" if model_requested else "semantic_context_failed",
                     status="degraded",
                     error_code=code,
-                    role="guidance",
+                    role="guidance" if model_requested else "semantic",
+                    model_requested=model_requested,
+                    semantic_context_mode=self.config.effective_semantic_mode,
                     **{
                         **usage,
                         "duration_ms": round((time.monotonic() - guidance_started) * 1000),
@@ -467,6 +554,7 @@ class MerchantExecutionService:
                     timeout_s=self.config.guidance_timeout_s,
                     **diagnostics,
                 )
+                self.store.delete("semantic_context", task.merchant_id, task.task_id)
                 # Raw failed text is private diagnostic data, not an instruction or UI payload.
                 self.store.put(
                     "guidance_failures",
@@ -587,6 +675,13 @@ class MerchantExecutionService:
             "view": self.adapter.view(task, self.clock()),
             "plan": self.store.get("plans", task.merchant_id, task_id),
             "guidance": {k: advice[k] for k in ("guidance", "subgraph")} if advice else None,
+            "semantic_context": self.store.get("semantic_context", task.merchant_id, task_id),
+            "knowledge_source": self.knowledge_source,
+            "effective_prompt_hash": self.effective_prompt_identity["combined_hash"],
+            "semantic_mode": {
+                "configured": self.config.semantic_context_mode,
+                "effective": self.config.effective_semantic_mode,
+            },
             "graph": self.graph.definition,
             "events": self.store.events(task.merchant_id, task_id, latest=True),
             "variant": self.config.variant if self.config.enabled else "C0",
