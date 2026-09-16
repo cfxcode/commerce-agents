@@ -55,6 +55,7 @@ VERTICALS: dict[str, dict[str, object]] = {
 
 PYTHON_MODULES = (
     "commerce_common",
+    "commerce_reasoning",
     "shopping_agent",
     "shopping_agent_runtime",
     "merchant_agent",

@@ -28,7 +28,7 @@ SDKS = {"shopping": shopping_agent_sdk, "merchant": merchant_agent_sdk}
 # Placeholder credentials: constructing a client performs no I/O.
 CLIENTS = {
     "direct-anthropic-api": (
-        lambda: AsyncAnthropic(api_key="stub-key"),
+        lambda: AsyncAnthropic(api_key="stub-key", base_url="https://api.anthropic.com"),
         "claude-sonnet-5",
         "api.anthropic.com",
     ),

@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "purpose": "public_regression_not_held_out",
+  "repetitions": 1,
+  "variants": [
+    "C0",
+    "O",
+    "T",
+    "P"
+  ],
+  "tasks": [
+    "evals/commerce_reasoning/tasks/T01.json",
+    "evals/commerce_reasoning/tasks/T02.json",
+    "evals/commerce_reasoning/tasks/T03.json",
+    "evals/commerce_reasoning/tasks/T04.json",
+    "evals/commerce_reasoning/tasks/T05.json",
+    "evals/commerce_reasoning/tasks/T06.json",
+    "evals/commerce_reasoning/tasks/T07.json",
+    "evals/commerce_reasoning/tasks/T08.json",
+    "evals/commerce_reasoning/tasks/T09.json",
+    "evals/commerce_reasoning/tasks/T10.json",
+    "evals/commerce_reasoning/tasks/T11.json",
+    "evals/commerce_reasoning/tasks/T12.json",
+    "evals/commerce_reasoning/tasks/T13.json",
+    "evals/commerce_reasoning/tasks/T14.json",
+    "evals/commerce_reasoning/tasks/T15.json",
+    "evals/commerce_reasoning/tasks/T16.json",
+    "evals/commerce_reasoning/tasks/T17.json",
+    "evals/commerce_reasoning/tasks/T18.json",
+    "evals/commerce_reasoning/tasks/T19.json",
+    "evals/commerce_reasoning/tasks/T20.json",
+    "evals/commerce_reasoning/tasks/T21.json",
+    "evals/commerce_reasoning/tasks/T22.json",
+    "evals/commerce_reasoning/tasks/T23.json",
+    "evals/commerce_reasoning/tasks/T24.json"
+  ]
+}

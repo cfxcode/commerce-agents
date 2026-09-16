@@ -1,5 +1,12 @@
 # Safety
 
+The retail Messages API additionally uses `commerce_reasoning.execution` and
+`retail.api.reasoning_backend`: deterministic plan binding, complete pending snapshots,
+preview-digest approval, inventory revisions, atomic in-process commits, idempotent
+application and read-only reconciliation. These checks stay active when PG guidance is
+disabled. They are retail integration features, not new guarantees on the SDK or MCP
+paths. See [Ontology / PG operation](ontology-pg/README.md) for storage and recovery limits.
+
 This page lists what the reference code enforces, what it still asks the model to do, and
 what a deployment adds.
 

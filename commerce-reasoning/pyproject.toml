@@ -1,0 +1,13 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "commerce-reasoning"
+version = "0.1.0.dev0"
+description = "Scoped retail observations, controlled execution and procedural guidance."
+requires-python = ">=3.11"
+dependencies = ["commerce-common==0.1.0.dev0", "merchant-agent-core==0.1.0.dev0", "pydantic>=2.7", "pyyaml>=6.0", "jsonschema>=4.26"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["commerce_reasoning"]

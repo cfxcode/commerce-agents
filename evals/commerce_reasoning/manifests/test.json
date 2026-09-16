@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "role": "test",
+  "repetitions": 3,
+  "purpose": "design_authored_grouped_corpus_not_statistical_generalization_evidence",
+  "tasks": [
+    "evals/commerce_reasoning/evolution/EV-test-01.json",
+    "evals/commerce_reasoning/evolution/EV-test-02.json",
+    "evals/commerce_reasoning/evolution/EV-test-03.json",
+    "evals/commerce_reasoning/evolution/EV-test-04.json",
+    "evals/commerce_reasoning/evolution/EV-test-05.json",
+    "evals/commerce_reasoning/evolution/EV-test-06.json"
+  ]
+}

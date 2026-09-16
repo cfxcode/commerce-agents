@@ -1,0 +1,24 @@
+{
+  "scope": "reference_configuration_only",
+  "graph_nodes": 15,
+  "graph_edges": 22,
+  "checks_passed": [
+    "JSON schema syntax",
+    "PG schema validation",
+    "unique node and edge identifiers",
+    "edge endpoint references",
+    "action references",
+    "predicate references",
+    "entry reachability",
+    "terminal reachability",
+    "entity relation and subtype references",
+    "state references"
+  ],
+  "not_tested": [
+    "commerce-agents runtime",
+    "predicate implementations",
+    "business transactions",
+    "live model calls",
+    "performance improvement"
+  ]
+}

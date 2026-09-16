@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "case_id": "EV-test-05",
+  "scenario": "应用响应丢失",
+  "target": "AR-2102",
+  "stock": 17,
+  "sales": 90,
+  "target_days": 21,
+  "task_text": "请为 AR-2102 做单个商品的库存评估。用近30天销量计算覆盖21天的补货方案，只暂存供我核对。",
+  "expected": {
+    "delta": 46,
+    "applied": 1,
+    "pending": 0,
+    "phases": [
+      "RECONCILE"
+    ]
+  },
+  "host_action": "apply",
+  "fault": "unknown_apply",
+  "family_group": "unknown_result"
+}

@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "attempt": 1,
+      "status": "rejected_schema",
+      "input_tokens": 6065,
+      "output_tokens": 1510,
+      "duration_ms": 29770,
+      "source": "observed CLI tool result; initial history entry predates usage persistence"
+    },
+    {
+      "attempt": 2,
+      "status": "unchanged",
+      "input_tokens": 6428,
+      "output_tokens": 635,
+      "duration_ms": 20297,
+      "source": "candidate-history.jsonl"
+    }
+  ]
+}

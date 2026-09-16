@@ -1,0 +1,522 @@
+{
+  "role": "training",
+  "provenance": "public pilot training-family subset; no validation/test-family results included",
+  "evidence": [
+    {
+      "evidence_id": "training-T01",
+      "case_id": "T01",
+      "passed": true,
+      "phase": "SUCCESS",
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 15041,
+            "output_tokens": 389,
+            "cache_read_input_tokens": 24576,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 2,
+        "applied": 1,
+        "degradations": 5,
+        "off_graph": 0
+      }
+    },
+    {
+      "evidence_id": "training-T02",
+      "case_id": "T02",
+      "passed": true,
+      "phase": "SUCCESS",
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 15328,
+            "output_tokens": 507,
+            "cache_read_input_tokens": 24576,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 2993,
+            "output_tokens": 329,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 2
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 2,
+        "applied": 1,
+        "degradations": 3,
+        "off_graph": 4
+      }
+    },
+    {
+      "evidence_id": "training-T04",
+      "case_id": "T04",
+      "passed": true,
+      "phase": "WAIT_APPROVAL",
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 8842,
+            "output_tokens": 419,
+            "cache_read_input_tokens": 30720,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 1,
+        "applied": 0,
+        "degradations": 5,
+        "off_graph": 0
+      }
+    },
+    {
+      "evidence_id": "training-T05",
+      "case_id": "T05",
+      "passed": true,
+      "phase": "NEED_INPUT",
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 11947,
+            "output_tokens": 362,
+            "cache_read_input_tokens": 18432,
+            "cache_creation_input_tokens": 0,
+            "calls": 4
+          },
+          "guidance": {
+            "input_tokens": 427,
+            "output_tokens": 329,
+            "cache_read_input_tokens": 2560,
+            "cache_creation_input_tokens": 0,
+            "calls": 2
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 0,
+        "applied": 0,
+        "degradations": 2,
+        "off_graph": 2
+      }
+    },
+    {
+      "evidence_id": "training-T06",
+      "case_id": "T06",
+      "passed": true,
+      "phase": "NO_ACTION",
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 6398,
+            "output_tokens": 365,
+            "cache_read_input_tokens": 24704,
+            "cache_creation_input_tokens": 0,
+            "calls": 4
+          },
+          "guidance": {
+            "input_tokens": 1698,
+            "output_tokens": 471,
+            "cache_read_input_tokens": 2560,
+            "cache_creation_input_tokens": 0,
+            "calls": 3
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 0,
+        "applied": 0,
+        "degradations": 1,
+        "off_graph": 2
+      }
+    },
+    {
+      "evidence_id": "training-T07",
+      "case_id": "T07",
+      "passed": true,
+      "phase": "NO_ACTION",
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 6100,
+            "output_tokens": 283,
+            "cache_read_input_tokens": 24576,
+            "cache_creation_input_tokens": 0,
+            "calls": 4
+          },
+          "guidance": {
+            "input_tokens": 226,
+            "output_tokens": 127,
+            "cache_read_input_tokens": 1280,
+            "cache_creation_input_tokens": 0,
+            "calls": 1
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 0,
+        "applied": 0,
+        "degradations": 3,
+        "off_graph": 2
+      }
+    },
+    {
+      "evidence_id": "training-T08",
+      "case_id": "T08",
+      "passed": true,
+      "phase": "ASSESS",
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 2650,
+            "output_tokens": 404,
+            "cache_read_input_tokens": 12288,
+            "cache_creation_input_tokens": 0,
+            "calls": 2
+          },
+          "guidance": {
+            "input_tokens": 2114,
+            "output_tokens": 371,
+            "cache_read_input_tokens": 1280,
+            "cache_creation_input_tokens": 0,
+            "calls": 2
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 0,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 1
+      }
+    },
+    {
+      "evidence_id": "training-T09",
+      "case_id": "T09",
+      "passed": true,
+      "phase": "SUCCESS",
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 15311,
+            "output_tokens": 450,
+            "cache_read_input_tokens": 24576,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 1707,
+            "output_tokens": 373,
+            "cache_read_input_tokens": 1280,
+            "cache_creation_input_tokens": 0,
+            "calls": 2
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 2,
+        "applied": 1,
+        "degradations": 3,
+        "off_graph": 4
+      }
+    },
+    {
+      "evidence_id": "training-T12",
+      "case_id": "T12",
+      "passed": true,
+      "phase": "NEED_INPUT",
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 5794,
+            "output_tokens": 449,
+            "cache_read_input_tokens": 24576,
+            "cache_creation_input_tokens": 0,
+            "calls": 4
+          },
+          "guidance": {
+            "input_tokens": 427,
+            "output_tokens": 293,
+            "cache_read_input_tokens": 2560,
+            "cache_creation_input_tokens": 0,
+            "calls": 2
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 0,
+        "applied": 0,
+        "degradations": 2,
+        "off_graph": 2
+      }
+    },
+    {
+      "evidence_id": "training-T14",
+      "case_id": "T14",
+      "passed": true,
+      "phase": "WAIT_APPROVAL",
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 8544,
+            "output_tokens": 391,
+            "cache_read_input_tokens": 31104,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 226,
+            "output_tokens": 130,
+            "cache_read_input_tokens": 1280,
+            "cache_creation_input_tokens": 0,
+            "calls": 1
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 1,
+        "applied": 0,
+        "degradations": 4,
+        "off_graph": 3
+      }
+    },
+    {
+      "evidence_id": "training-T15",
+      "case_id": "T15",
+      "passed": true,
+      "phase": "SUCCESS",
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 9217,
+            "output_tokens": 421,
+            "cache_read_input_tokens": 30720,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 427,
+            "output_tokens": 283,
+            "cache_read_input_tokens": 2560,
+            "cache_creation_input_tokens": 0,
+            "calls": 2
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 2,
+        "applied": 1,
+        "degradations": 3,
+        "off_graph": 4
+      }
+    },
+    {
+      "evidence_id": "training-T23",
+      "case_id": "T23",
+      "passed": true,
+      "phase": "SUCCESS",
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 8703,
+            "output_tokens": 381,
+            "cache_read_input_tokens": 30848,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 2,
+        "applied": 1,
+        "degradations": 5,
+        "off_graph": 0
+      }
+    }
+  ]
+}

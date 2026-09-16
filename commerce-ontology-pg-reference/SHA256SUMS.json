@@ -1,0 +1,13 @@
+{
+  "README.md": "83e8d14e6db890622d3319b98fcae0a231794c7bf1e2a20231b3c9416354ed6c",
+  "guidance.prompt.txt": "b7dc02ae4b8f6ae296e291279e3727849dab2248ddb06d93c5f989c579c49d55",
+  "inventory_restock.v1.json": "b0748507bc980ccf35ca102719f29747c755b366fe6804215bd00a8d36774eb8",
+  "ontology.retail.v1.yaml": "cc77acaf05d48285587f573b3b010923572f8cd8878b6a93d705ebad8f98b585",
+  "pg.schema.json": "ed3945ba290f19a3c827237d13c534483ee11df1d47642fd4c2b07cebdaf900b",
+  "predicates.v1.yaml": "844f81885d11bb7ddf20d10e2ae3b2b73aca7a5570f89b220e3261b33bed998f",
+  "reasoning.example.yaml": "20ce897c326f147269d5312e82b577d95d35251404126a451d0b895c6dce5664",
+  "refiner.prompt.txt": "894e959d409c7851e1012d0362212ad1777276d5a7266ba10d10563929dae8f2",
+  "solver-integration.prompt.txt": "d2d3caa77a7dead0d6f2270ab20b581ca3a251852a8e0a083566c1477997104a",
+  "task.T01.example.json": "f7c2a1814eb012de5a34c1b0be957eb56c01b43605bc4d8c4b945a6ca900f953",
+  "validation-report.json": "e3c4baecc103824e257d7828b994c0d39e7d7b90ac99cc574cb554eb59d814ef"
+}

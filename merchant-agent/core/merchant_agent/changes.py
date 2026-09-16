@@ -7,6 +7,7 @@ build on. Guardrails run when a change is staged and again before it is applied.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 
 from commerce_common.fencing import truncate_display
@@ -129,8 +130,9 @@ class ChangeLedger:
     that are currently staged; applied and discarded changes stay in the ledger as the
     audit trail."""
 
-    def __init__(self, config: MerchantAgentConfig):
+    def __init__(self, config: MerchantAgentConfig, *, clock: Callable[[], datetime] | None = None):
         self._config = config
+        self._clock = clock or (lambda: datetime.now(UTC))
         self._changes: dict[str, StagedChange] = {}
         self._sequence = 0
 
@@ -160,7 +162,7 @@ class ChangeLedger:
             # trimmed rather than refused.
             summary=truncate_display(summary, 200),
             items=items,
-            created_at=datetime.now(UTC),
+            created_at=self._clock(),
             created_by=actor,
             created_by_kind=actor_kind,
             guardrail_notes=guardrail_notes or [],
@@ -194,7 +196,7 @@ class ChangeLedger:
         updated = change.model_copy(
             update={
                 "status": ChangeStatus.APPLIED,
-                "applied_at": datetime.now(UTC),
+                "applied_at": self._clock(),
                 "applied_by": actor,
             }
         )
@@ -208,7 +210,7 @@ class ChangeLedger:
         updated = change.model_copy(
             update={
                 "status": ChangeStatus.DISCARDED,
-                "discarded_at": datetime.now(UTC),
+                "discarded_at": self._clock(),
                 "discarded_by": actor,
                 "discarded_by_kind": actor_kind,
             }

@@ -74,7 +74,13 @@ export class AgentApi {
 
   /** A storefront passes its profile as `{ user_id }` and gets the shopper's name back; a merchant session names its operator. */
   async startSession(body?: Record<string, unknown>): Promise<{ sessionId: string; operator?: string; shopper?: { name: string; tier?: string } } | null> {
-    const data = await this.post<{ session_id: string; operator?: string; name?: string | null; tier?: string | null }>("/session", body);
+    const data = await this.request<{ session_id: string; operator?: string; name?: string | null; tier?: string | null }>("/session", {
+      method: "POST",
+      headers: this.headers(body !== undefined),
+      body: body === undefined ? undefined : JSON.stringify(body),
+      // An unresponsive API must leave the workspace with a retryable error.
+      signal: AbortSignal.timeout(10_000),
+    });
     if (!data?.session_id) return null;
     const shopper = data.name ? { name: data.name, tier: data.tier ?? undefined } : undefined;
     return { sessionId: data.session_id, operator: data.operator, shopper };

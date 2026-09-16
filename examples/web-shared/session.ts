@@ -3,7 +3,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { AgentApi } from "./api";
 
 export interface Session {
@@ -24,24 +24,34 @@ const generations = new WeakMap<AgentApi, number>();
 export function useSession(
   api: AgentApi,
   options: { profile?: string } = {},
-): Session {
+): Session & { status: "connecting" | "ready" | "failed"; retry: () => void } {
   const { profile } = options;
   const [session, setSession] = useState<Session>({ sessionId: null });
+  const [status, setStatus] = useState<"connecting" | "ready" | "failed">("connecting");
+  const [attempt, setAttempt] = useState(0);
+  const retry = useCallback(() => {
+    setStatus("connecting");
+    setAttempt((value) => value + 1);
+  }, []);
 
   useEffect(() => {
     const generation = (generations.get(api) ?? 0) + 1;
     generations.set(api, generation);
     const current = () => generations.get(api) === generation;
+    api.session = null;
+    setSession({ sessionId: null });
+    setStatus("connecting");
     void (async () => {
       const started = await api.startSession(profile ? { user_id: profile } : undefined);
       if (!current()) return;
       api.session = started?.sessionId ?? null;
       setSession({ sessionId: started?.sessionId ?? null, operator: started?.operator, shopper: started?.shopper });
+      setStatus(started ? "ready" : "failed");
     })();
     return () => {
       generations.set(api, (generations.get(api) ?? 0) + 1);
     };
-  }, [api, profile]);
+  }, [api, profile, attempt]);
 
-  return session;
+  return { ...session, status, retry };
 }

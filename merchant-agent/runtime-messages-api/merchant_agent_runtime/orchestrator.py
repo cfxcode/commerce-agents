@@ -100,11 +100,13 @@ class MerchantAgent:
         extra_presentation_tools: Sequence[PresentationExtension] = (),
         extra_delegates: Sequence[DelegateExtension] = (),
         executor_class: type[MerchantToolExecutor] = MerchantToolExecutor,
+        execution_service: Any = None,
     ) -> None:
         if skills is None:
             skills = SkillRegistry.from_dir(skills_dir) if skills_dir else SkillRegistry([])
         self.config = config or MerchantAgentConfig()
         self.executor_class = executor_class
+        self.execution_service = execution_service
         self.backend = backend
         self.skills = skills
         self.memory: MemoryRuntime = build_memory(self.config, memory_store, memory_write_filter)
@@ -129,10 +131,27 @@ class MerchantAgent:
         # the presentation tools that render while they stream ask the API for their
         # input as it is generated.
         self._static_system = build_static_system(self.config, self.skills)
+        if execution_service is not None:
+            self._static_system += "\n\n" + execution_service.solver_notice
         tools = build_tools(
             self.config, self.skills.names, self.extra_presentation_tools, self.extra_delegates
         )
+        if execution_service is not None:
+            tools.extend(execution_service.extra_tools(self.config))
         self._tools = with_tool_cache_control(with_eager_input(tools, self._partial_ui_tools))
+
+    def create_executor(
+        self, *, origin: str = "agent", preview_digest: str | None = None, **kwargs: Any
+    ) -> Any:
+        """The same factory is used by the conversation and host approval routes."""
+        factory = (
+            self.execution_service.create_executor
+            if self.execution_service
+            else self.executor_class
+        )
+        if self.execution_service:
+            kwargs.update(origin=origin, preview_digest=preview_digest)
+        return factory(**kwargs)
 
     async def stream_turn(
         self,
@@ -166,7 +185,10 @@ class MerchantAgent:
         # Delegates post progress lines while their executions are in flight; the loop
         # below drains them into the stream between the tool_call and tool_result events.
         progress: asyncio.Queue[AgentEvent | None] = asyncio.Queue()
-        executor = self.executor_class(
+        user_text = latest_user_text(messages, HOST_TEXTS)
+        if self.execution_service:
+            await self.execution_service.begin_turn(session, user_text, self.client, self.config)
+        executor = self.create_executor(
             backend=self.backend,
             config=self.config,
             skills=self.skills,
@@ -178,7 +200,6 @@ class MerchantAgent:
             progress=progress.put_nowait,
             usage=usage,
         )
-        user_text = latest_user_text(messages, HOST_TEXTS)
         forced_tool = first_forced_tool(GROUNDING_RULES, self.config, user_text, state)
         remind = change_requested(self.config, user_text)
         stop_reason: str | None = None
@@ -215,6 +236,10 @@ class MerchantAgent:
                         self.config.rolling_conversation_cache and tool_choice["type"] == "auto"
                     ),
                 )
+                if self.execution_service:
+                    request_messages = await self.execution_service.prepare_request(
+                        session, request_messages, self.client, self.config
+                    )
                 request: dict[str, Any] = {
                     "model": self.config.model,
                     "max_tokens": self.config.max_tokens,
@@ -224,8 +249,13 @@ class MerchantAgent:
                     "messages": request_messages,
                     **self.config.thinking_request_fields(),
                 }
+                if self.execution_service:
+                    self.execution_service.record_request(session, request)
                 dispatcher = EagerDispatcher(
-                    executor.execute, self.config.eager_tool_dispatch and not force_text
+                    executor.execute,
+                    self.config.eager_tool_dispatch and not force_text,
+                    serial=self.execution_service is not None,
+                    execute_call=getattr(executor, "execute_call", None),
                 )
                 streamed = StreamedRound(
                     specs=self._specs,
@@ -268,6 +298,8 @@ class MerchantAgent:
                         unreadable = set()
                     stop_reason = final.stop_reason if final else "tool_use"
                     accumulate_usage(usage, response)
+                    if self.execution_service:
+                        self.execution_service.model_finished(session, response, call_started)
                     last_prompt = prompt_tokens(response)
                     if reply is not None:
                         messages.append(reply)
@@ -310,6 +342,7 @@ class MerchantAgent:
                         while not progress.empty():
                             progress.get_nowait()
                 finally:
+                    settled.update(dispatcher.completed())
                     dispatcher.cancel()
                 calls = list(zip(tool_uses, outcomes, strict=True))
                 settled = {block.id: outcome for block, outcome in calls}
@@ -342,6 +375,8 @@ class MerchantAgent:
         cleared = compact_history(
             messages, last_prompt, self.config.compact_history_above_tokens, session.session_id
         )
+        if self.execution_service:
+            self.execution_service.finish_turn(session, usage, elapsed_ms(turn_started))
         yield AgentEvent.turn_complete(stop_reason, usage, elapsed_ms(turn_started), cleared)
 
     async def update_memory(

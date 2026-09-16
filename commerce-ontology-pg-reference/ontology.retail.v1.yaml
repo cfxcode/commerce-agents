@@ -1,0 +1,294 @@
+schema_version: '1.0'
+ontology_id: retail_operations
+version: 1.0.0
+status: design_reference_not_implemented
+upstream_commit: fd4d59224ab96b43c6dc6888207c67b3bd5a24cf
+scope:
+  vertical: retail
+  role: merchant
+  runtime: messages_api
+identity_key:
+- merchant_id
+- object_type
+- external_id
+value_statuses:
+- known
+- unknown
+- stale
+- invalid
+- conflicting
+change_statuses:
+- staged
+- applied
+- discarded
+entities:
+- id: Merchant
+  source: MerchantSessionContext.merchant_id
+  trusted_origin: host
+- id: Operator
+  source: MerchantSessionContext.operator
+  trusted_origin: host
+- id: Listing
+  source: Listing / ListingDetails
+  key: listing_id
+- id: ProductFamily
+  subtype_of: Listing
+  classification_rule: nonempty_options
+- id: SellableItem
+  subtype_of: Listing
+  classification_rule: not_family
+- id: Variant
+  subtype_of: SellableItem
+  classification_rule: nonempty_variant_of_and_not_family
+- id: InventoryAlert
+  source: InventoryAlert
+  key: adapter_generated_observation_id
+- id: StagedChange
+  source: StagedChange
+  key: change_id
+- id: RestockPlan
+  source: new_sidecar_model
+  key: plan_id
+- id: ApprovalRecord
+  source: new_host_only_model
+  key: approval_id
+- id: Observation
+  source: new_structured_result_adapter
+  key: observation_id
+relations:
+- id: belongs_to_merchant
+  domain:
+  - Listing
+  - InventoryAlert
+  - StagedChange
+  - RestockPlan
+  - ApprovalRecord
+  - Observation
+  range:
+  - Merchant
+- id: variant_of
+  domain:
+  - Variant
+  range:
+  - ProductFamily
+  max_targets: 1
+- id: alert_for
+  domain:
+  - InventoryAlert
+  range:
+  - Listing
+- id: change_targets
+  domain:
+  - StagedChange
+  range:
+  - Listing
+- id: plan_for
+  domain:
+  - RestockPlan
+  range:
+  - SellableItem
+- id: supported_by
+  domain:
+  - RestockPlan
+  - StagedChange
+  range:
+  - Observation
+- id: approved_by
+  domain:
+  - ApprovalRecord
+  range:
+  - Operator
+- id: realized_by
+  domain:
+  - RestockPlan
+  range:
+  - StagedChange
+actions:
+- id: ReadInventoryAlerts
+  tool_binding: get_inventory_alerts
+  effect: observe_alerts
+  side_effect: false
+  allowed_origins:
+  - agent
+  - host
+  checks:
+  - TENANT_SCOPE
+- id: ReadListing
+  tool_binding: get_listing
+  effect: observe_full_listing_and_provenance
+  side_effect: false
+  allowed_origins:
+  - agent
+  - host
+  checks:
+  - TENANT_SCOPE
+- id: ReadPendingChanges
+  tool_binding: get_pending_changes
+  effect: replace_current_pending_snapshot
+  side_effect: false
+  allowed_origins:
+  - agent
+  - host
+  checks:
+  - TENANT_SCOPE
+  - COVERAGE_CAPTURE
+- id: CalculateRestockPlan
+  tool_binding: calculate_restock_plan
+  effect: create_auditable_plan_no_inventory_write
+  side_effect: false
+  allowed_origins:
+  - agent
+  - host
+  checks:
+  - TENANT_SCOPE
+  - VALID_TARGET
+  - FRESH_INPUTS
+  - COMPLETE_PENDING_SNAPSHOT
+- id: StageRestock
+  tool_binding: stage_inventory_action
+  effect: create_staged_change_only
+  side_effect: true
+  allowed_origins:
+  - agent
+  - host
+  checks:
+  - TENANT_SCOPE
+  - UPSTREAM_PROVENANCE
+  - VALID_TARGET
+  - PLAN_MATCH
+  - PENDING_CONFLICT_ATOMIC
+  - UPSTREAM_GUARDRAILS
+- id: PreviewChange
+  tool_binding: present_change_preview
+  effect: show_existing_change_no_authorization
+  side_effect: false
+  allowed_origins:
+  - agent
+  - host
+  checks:
+  - TENANT_SCOPE
+  - UPSTREAM_PROVENANCE
+- id: ApplyApprovedChange
+  tool_binding: apply_change
+  effect: apply_approved_delta_then_verify
+  side_effect: true
+  allowed_origins:
+  - host
+  checks:
+  - TENANT_SCOPE
+  - HOST_APPROVAL
+  - APPROVAL_DIGEST
+  - UPSTREAM_GUARDRAILS
+  - CURRENT_REVISION
+  - IDEMPOTENCY
+  - ATOMIC_COMMIT
+- id: DiscardChange
+  tool_binding: discard_change
+  effect: discard_staged_change_no_stock_rollback
+  side_effect: true
+  allowed_origins:
+  - agent
+  - host
+  checks:
+  - TENANT_SCOPE
+  - UPSTREAM_PROVENANCE
+  - STAGED_STATUS
+- id: VerifyAppliedChange
+  tool_binding: get_listing
+  effect: observe_effect_no_write
+  side_effect: false
+  allowed_origins:
+  - agent
+  - host
+  checks:
+  - TENANT_SCOPE
+  - ACTION_RECEIPT
+invariants:
+- family_is_not_a_restock_target
+- unknown_is_not_zero_or_absent
+- stage_does_not_apply_inventory
+- chat_text_does_not_grant_approval
+- pending_stock_is_not_available_stock
+- pg_condition_is_not_authorization
+- same_idempotency_key_cannot_apply_twice
+- outcome_unknown_cannot_blindly_retry
+restock_formula:
+  version: cover_days_v1
+  history_days: 30
+  rounding: ceil
+  inputs:
+  - stock
+  - sales_last_30d
+  - target_days
+  output: max(0, ceil(sales_last_30d * target_days / 30) - stock)
+  zero_sales: no_positive_automatic_restock
+  pending_change_policy: block_new_stage_and_review
+  quantity_above_guardrail: block_do_not_split_or_clamp
+states:
+- id: task_started
+  label: 新任务开始
+- id: assessment_ready
+  label: 评估证据及冲突
+- id: waiting_for_host
+  label: 预览后等待宿主
+- id: outcome_unknown
+  label: 执行结果待核对
+- id: needs_input
+  label: 请求补充信息
+- id: review_existing
+  label: 复核已有变更
+- id: no_action
+  label: 有依据地不操作
+- id: success
+  label: 应用并验证成功
+- id: declined
+  label: 宿主拒绝／丢弃
+check_catalog:
+- id: ACTION_RECEIPT
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: APPROVAL_DIGEST
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: ATOMIC_COMMIT
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: COMPLETE_PENDING_SNAPSHOT
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: COVERAGE_CAPTURE
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: CURRENT_REVISION
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: FRESH_INPUTS
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: HOST_APPROVAL
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: IDEMPOTENCY
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: PENDING_CONFLICT_ATOMIC
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: PLAN_MATCH
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: STAGED_STATUS
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: TENANT_SCOPE
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: UPSTREAM_GUARDRAILS
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: UPSTREAM_PROVENANCE
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true
+- id: VALID_TARGET
+  implementation: TO_IMPLEMENT_OR_BIND_AND_TEST
+  immutable_to_refiner: true

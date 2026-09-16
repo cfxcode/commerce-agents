@@ -9,24 +9,30 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from commerce_common.memory import MemoryStore
+from commerce_reasoning.execution import MerchantExecutionService
 from demo_common import REPO_ROOT, MerchantIdentity, build_merchant_router
 from merchant_agent_runtime import MerchantAgent
 
-from .agent_config import build_merchant_config
-from .mock_merchant import MockRetailMerchant
+from .agent_config import build_merchant_config, build_reasoning_config
 from .mock_retail import MockRetail
+from .reasoning_backend import ReasoningRetailMerchant
 
 IDENTITY = MerchantIdentity(merchant_id="acme-retail", operator="Avery")
 
 
 def create_merchant_router(storefront: MockRetail, memory_store: MemoryStore) -> APIRouter:
     config = build_merchant_config(storefront.store_name)
-    merchant = MockRetailMerchant(storefront, config, merchant_id=IDENTITY.merchant_id)
+    config.require_host_approval = True
+    merchant = ReasoningRetailMerchant(storefront, config, merchant_id=IDENTITY.merchant_id)
+    service = MerchantExecutionService(
+        backend=merchant, root=REPO_ROOT, config=build_reasoning_config()
+    )
     agent = MerchantAgent(
         backend=merchant,
         skills_dir=REPO_ROOT / "merchant-agent" / "skills",
         config=config,
         memory_store=memory_store,
+        execution_service=service,
     )
     return build_merchant_router(
         storefront=storefront,

@@ -1,0 +1,16 @@
+{
+  "commerce-common/commerce_common/turn.py": "3272228afda93d827be899158d334c0e90c1a08262f8074ed6f30746b518d5d4",
+  "commerce-reasoning/commerce_reasoning/__init__.py": "75a7052e7f94dcfebecca4228b5a635545ae0dfc9dac68ff26290baab7848607",
+  "commerce-reasoning/commerce_reasoning/cli.py": "e8b01848038a5a32f04bbf9ce3c644126a16e42a9fefc1ebcc09ec12899f1725",
+  "commerce-reasoning/commerce_reasoning/config.py": "7a32d15f024b5e631aae56d05f12cccda506fc9da8b4662a0edf2c467f26d75f",
+  "commerce-reasoning/commerce_reasoning/evaluation.py": "06d8162d065b00927d8dddad45bab87b7780100ecd62f31d6632357913e73699",
+  "commerce-reasoning/commerce_reasoning/evolution.py": "c818a5e0794443a7cb8a64e4b7d80a753f7de69ac349cb408cf556596fead162",
+  "commerce-reasoning/commerce_reasoning/execution.py": "be2bb7d7a3908a53c0b8091d5f9c4eae216d35856260774a4f9b4b0c2461834b",
+  "commerce-reasoning/commerce_reasoning/guidance.py": "89a296ba093949a401ddabe72d6460327c3a4fcbd521b347cedb33008c749886",
+  "commerce-reasoning/commerce_reasoning/models.py": "f8fd1a1df832177cf7fbfd705bd0ee4aebda85c0d64891acc21fbf9ad5cb70f1",
+  "commerce-reasoning/commerce_reasoning/ontology.py": "30f3cf3017e17a4d5bf392900db291c4a8e0b2b037e5b87ab0fca3483bc547cd",
+  "commerce-reasoning/commerce_reasoning/procedural.py": "385daf82269e577f3e637427755c5a73197039ce5dceb595796dd1f6629d0a9e",
+  "commerce-reasoning/commerce_reasoning/storage.py": "64d4e6b81d2c7f31e119715e2a87ce1fbcdb936b3aec987fdcabdb24c5514565",
+  "examples/retail/api/reasoning_backend.py": "7983565198a0966673dae253eca18d5a45c33a1e22e916c6352ee1dffbacd486",
+  "merchant-agent/runtime-messages-api/merchant_agent_runtime/orchestrator.py": "05816fd8a8a2f05d0eda0c57119c94d80391695be8e4c32d418cc3a3e291aafa"
+}

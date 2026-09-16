@@ -36,6 +36,7 @@ merchant-agent/managed-agents/merchant-mcp-server/.merchant_memory.json
 
 # OS / editor / local tooling
 .DS_Store
+runtime/
 .idea/
 .vscode/
 .claude/

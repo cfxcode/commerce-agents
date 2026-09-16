@@ -22,6 +22,12 @@ uvicorn retail.api.main:app --app-dir examples --reload --port 8000
 (cd examples/retail/merchant-web && npm run dev)       # :3100
 ```
 
+The portal needs the API as well as the Next.js server. If the session cannot connect,
+it shows the configured service address and a **Try again** button; session requests time
+out after 10 seconds. Start the API at that address, then retry. When using a custom API
+port, set `NEXT_PUBLIC_API_URL` before starting or building the web app, or let
+`scripts/run_demo.py retail --merchant --api-port <port>` configure both processes.
+
 Chat needs `ANTHROPIC_API_KEY` in the repo-root `.env` or the environment; browsing the
 catalog and the portal's widgets do not. `MERCHANT_REQUIRE_HOST_APPROVAL=0` lets a chat
 approval apply a change; by default the preview card's button applies it.
@@ -109,3 +115,7 @@ Product photos in `storefront-web/public/products/` are CC0 category images list
 
 Sessions and identity are the shared host code in [`../demo_common/`](../demo_common/): a
 session id stands for a demo profile or the one merchant.
+
+## Reasoning inspector
+
+The merchant portal includes a read-only Reasoning view in English and Simplified Chinese. Restock proposals require an explicit listing and coverage days, a full listing read, and a complete pending queue. The Approve button binds to the displayed change digest. [Configuration and evaluation](../../docs/ontology-pg/README.md) describe the optional PG and the always-on retail execution checks.

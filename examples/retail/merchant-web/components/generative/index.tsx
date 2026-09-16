@@ -15,7 +15,7 @@ export default function GenerativeBlock({
   onChangeAction,
   onPrefill,
 }: GenerativeBlockProps & {
-  onChangeAction?: (changeId: string, action: ChangeAction) => Promise<StagedChange | null>;
+  onChangeAction?: (changeId: string, action: ChangeAction, previewDigest?: string) => Promise<StagedChange | null>;
   onPrefill?: (text: string) => void;
 }) {
   switch (block.component) {

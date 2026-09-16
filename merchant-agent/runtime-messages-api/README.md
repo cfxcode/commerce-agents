@@ -3,7 +3,9 @@
 The merchant agent's turn loop on the Messages API. `MerchantAgent` builds the static
 prompt and tool array once, and on each turn prefetches the merchant context and memory
 facts, streams the model, executes tool calls concurrently through
-`merchant_agent.executor`, and yields events for the portal to render. The four example
+`merchant_agent.executor`, and yields events for the portal to render. An optional `execution_service` supplies a shared executor factory, explicit serial dispatch, per-round advisory context, and audit hooks. `create_executor` is also the host card route entry point; the default factory preserves the existing executor behavior.
+
+The four example
 APIs are host applications around it (`examples/demo_common/merchant.py`).
 
 | Module | Holds |

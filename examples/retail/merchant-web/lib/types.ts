@@ -243,6 +243,7 @@ export interface DigestPayload {
 }
 
 export interface ChangePreviewPayload {
+  preview_digest?: string;
   change_id: string;
   headline?: string | null;
   note?: string | null;

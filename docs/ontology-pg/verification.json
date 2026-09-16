@@ -1,0 +1,72 @@
+{
+  "base_commit": "0a8fd5791f641c0126ab9320955225cf53a3177c",
+  "commands": [
+    {
+      "command": "python3 -m pytest -q --tb=short",
+      "status": "passed",
+      "passed": 1177,
+      "skipped": 1,
+      "warnings": 2
+    },
+    {
+      "command": "python3 -m ruff check .",
+      "status": "passed"
+    },
+    {
+      "command": "python3 -m ruff format --check .",
+      "status": "passed",
+      "files": 232
+    },
+    {
+      "command": "python3 scripts/check.py",
+      "status": "passed",
+      "packages": 8
+    },
+    {
+      "command": "python3 scripts/verify_all.py",
+      "status": "passed",
+      "steps": 14,
+      "web_builds": 8,
+      "managed_deploy_dry_runs": 2
+    },
+    {
+      "command": "node scripts/check_retail_i18n.cjs",
+      "status": "passed",
+      "bilingual_card_renders": 16
+    },
+    {
+      "command": "python3 -m commerce_reasoning.cli verify-safety --out runtime/safety.json",
+      "status": "passed",
+      "tests": 33
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "new_reasoning_tests": 65,
+  "live_pilot": {
+    "submitted": 96,
+    "passed": 81,
+    "api_failures": 2,
+    "task_budget_exhausted": 1,
+    "state_finalization_failures": 12
+  },
+  "targeted_retests": {
+    "submitted": 12,
+    "passed": 12
+  },
+  "fault_retries": {
+    "submitted": 3,
+    "passed": 3
+  },
+  "published_manual_release": "retail-f3a5a207d3c84359bcedd0bb9282cd2b",
+  "evolved_release_published": false,
+  "browser_qa": {
+    "desktop_empty_and_graph_render": "observed",
+    "full_card_click_flow": "not_completed_browser_control_changed",
+    "narrow_viewport": "not_completed",
+    "approval_http_integration": "passed"
+  },
+  "scope": "local single-process retail simulation; no production deployment"
+}

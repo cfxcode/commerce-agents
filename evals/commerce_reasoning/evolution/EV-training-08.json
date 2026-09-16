@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "case_id": "EV-training-08",
+  "scenario": "历史变更已应用",
+  "target": "AR-2102",
+  "stock": 17,
+  "sales": 90,
+  "target_days": 21,
+  "task_text": "请为 AR-2102 做单个商品的库存评估。用近30天销量计算覆盖21天的补货方案，只暂存供我核对。",
+  "expected": {
+    "delta": 45,
+    "applied": 1,
+    "pending": 0,
+    "phases": [
+      "SUCCESS"
+    ],
+    "verify": true
+  },
+  "host_action": "apply",
+  "fault": "historical",
+  "family_group": "historical_pending"
+}

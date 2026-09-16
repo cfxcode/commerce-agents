@@ -16,7 +16,7 @@ runtimes import both. One module per mechanism:
 | `delegation.py` | `DelegateExtension`: an isolated model task behind a tool |
 | `execution.py` | `BaseToolExecutor`: dispatch, failure ladder, skills, presentation, delegates, memory; `split_status` (a call's `status` line, handed to the host) |
 | `streaming.py` | `AgentEvent` (the event list is in the module docstring), `ToolOutcome`, `to_sse` |
-| `turn.py` | Messages API turn helpers: user text, history compaction, eager tool dispatch, `StreamedRound` (a round's `ui_partial` frames as it streams; an error result for unparsed input), `round_closes_turn` (a round of rendered presentation calls, chips among them, ends the turn), tool-result blocks, usage, the model-call log record, transcript slice |
+| `turn.py` | Messages API turn helpers: user text, history compaction, eager or explicit serial tool dispatch with per-call completed results, `StreamedRound` (a round's `ui_partial` frames as it streams; an error result for unparsed input), `round_closes_turn` (a round of rendered presentation calls, chips among them, ends the turn), tool-result blocks, usage, the model-call log record, transcript slice |
 | `agent_sdk.py` | The SDK runtimes' shared plumbing and its `round_closes_turn` hook (needs `claude-agent-sdk`) |
 | `mcp_server.py` | The MCP servers' shared plumbing: `registrar` (leaves out switched-off tools and the `status` argument) and the loopback bind guard (needs `mcp`) |
 | `manifest.py` | Resolves a Managed Agents manifest; run by `scripts/deploy_managed_agent.sh` |

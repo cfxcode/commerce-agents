@@ -1,0 +1,27 @@
+{
+  "release_id": "retail-f3a5a207d3c84359bcedd0bb9282cd2b",
+  "status": "published",
+  "approved_by": "codex-local-validation",
+  "validation_run_id": "safety-e4676272624046a9ad4acc0d44e3c5f9",
+  "runtime_commit": "0a8fd5791f641c0126ab9320955225cf53a3177c",
+  "runtime_source_hash": "1239209da4b0c6aa98a3a1eb5617470719d12bff667fbb66cd8bc3fbed6bb4fe",
+  "graph_hash": "a7b78b99f601a5e764d83353343d12fae5de96e538aecb2ca134f4cca1b1644a",
+  "ontology_hash": "4c5212f63f6a177ff3f6bdea501260f152cab7ffe420aac194d5409999061c36",
+  "content_hashes": {
+    "knowledge/releases/retail-f3a5a207d3c84359bcedd0bb9282cd2b/retail.v1.yaml": "074abc42948d829b2cde43a7224abe4ed9293bdf39c4a22fd8f93a1e0d5c90d3",
+    "knowledge/releases/retail-f3a5a207d3c84359bcedd0bb9282cd2b/inventory_restock.v1.json": "b6ceededb353d7cefcae4449483ebfa364708e7627ced23f5f2b2611e2283f62",
+    "knowledge/releases/retail-f3a5a207d3c84359bcedd0bb9282cd2b/predicates.v1.yaml": "148cb15f2618b0e2c8274f3ac491c7ffb099fb637ed08765ea809e5f0a964e60",
+    "knowledge/releases/retail-f3a5a207d3c84359bcedd0bb9282cd2b/pg.schema.json": "ed3945ba290f19a3c827237d13c534483ee11df1d47642fd4c2b07cebdaf900b",
+    "knowledge/releases/retail-f3a5a207d3c84359bcedd0bb9282cd2b/guidance.txt": "b7dc02ae4b8f6ae296e291279e3727849dab2248ddb06d93c5f989c579c49d55",
+    "knowledge/releases/retail-f3a5a207d3c84359bcedd0bb9282cd2b/solver.txt": "d2d3caa77a7dead0d6f2270ab20b581ca3a251852a8e0a083566c1477997104a",
+    "knowledge/releases/retail-f3a5a207d3c84359bcedd0bb9282cd2b/refiner.txt": "894e959d409c7851e1012d0362212ad1777276d5a7266ba10d10563929dae8f2",
+    "knowledge/releases/retail-f3a5a207d3c84359bcedd0bb9282cd2b/validation.json": "0277a22cf2ef180bbf26871aec06e15ccdbe4152de46359ff62310a51bebc66f"
+  },
+  "knowledge_paths": {
+    "ontology_path": "knowledge/releases/retail-f3a5a207d3c84359bcedd0bb9282cd2b/retail.v1.yaml",
+    "pg_path": "knowledge/releases/retail-f3a5a207d3c84359bcedd0bb9282cd2b/inventory_restock.v1.json",
+    "predicates_path": "knowledge/releases/retail-f3a5a207d3c84359bcedd0bb9282cd2b/predicates.v1.yaml",
+    "schema_path": "knowledge/releases/retail-f3a5a207d3c84359bcedd0bb9282cd2b/pg.schema.json"
+  },
+  "initial_manual_release": true
+}

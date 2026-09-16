@@ -1,0 +1,17 @@
+{
+  "run_id": "safety-54ea30d8dd8149d4993ce5687b7d52cb",
+  "graph_hash": "a7b78b99f601a5e764d83353343d12fae5de96e538aecb2ca134f4cca1b1644a",
+  "safety_regression_passed": true,
+  "exit_code": 0,
+  "command": [
+    "/Library/Frameworks/Python.framework/Versions/3.11/bin/python3",
+    "-m",
+    "pytest",
+    "-q",
+    "--tb=short",
+    "commerce-reasoning/tests/test_execution.py",
+    "commerce-reasoning/tests/test_runtime.py"
+  ],
+  "output": "................................                                         [100%]\n32 passed in 1.11s\n",
+  "output_hash": "b5cacf21e8e0309fd2270cb3aba2d0ef885f8243289305577ce689737d466ac7"
+}

@@ -19,8 +19,13 @@ paths each, four vertical examples, and a Claude Code plugin.
 - `docs/`: `safety.md`, `backends.md`, `deployment.md`. `scripts/`: install, demo, smoke, screenshots, check, deploy, verify.
 - `tests/`: the suites that span packages (both roles on all three paths); each package keeps its own `tests/`.
 
-`requirements.txt` installs the seven packages and their pinned dependencies (`requirements-dev.txt`
+`requirements.txt` installs the eight packages and their pinned dependencies (`requirements-dev.txt`
 adds pytest and ruff); `scripts/install.sh` runs it.
+
+- `commerce-reasoning/`: retail observations, controlled execution, procedural graphs, evaluation, and offline candidate releases.
+- `knowledge/`, `configs/`, `evals/commerce_reasoning/`: versioned definitions, switches, and frozen regression tasks.
+- `examples/retail/api/reasoning_backend.py`: single-process atomic simulation with revisions and receipts.
+- `docs/ontology-pg/`: setup, interface contracts, validation and measured results.
 
 ## Design rules
 

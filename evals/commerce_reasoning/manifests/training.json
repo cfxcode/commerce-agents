@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "role": "training",
+  "repetitions": 3,
+  "purpose": "design_authored_grouped_corpus_not_statistical_generalization_evidence",
+  "tasks": [
+    "evals/commerce_reasoning/evolution/EV-training-01.json",
+    "evals/commerce_reasoning/evolution/EV-training-02.json",
+    "evals/commerce_reasoning/evolution/EV-training-03.json",
+    "evals/commerce_reasoning/evolution/EV-training-04.json",
+    "evals/commerce_reasoning/evolution/EV-training-05.json",
+    "evals/commerce_reasoning/evolution/EV-training-06.json",
+    "evals/commerce_reasoning/evolution/EV-training-07.json",
+    "evals/commerce_reasoning/evolution/EV-training-08.json",
+    "evals/commerce_reasoning/evolution/EV-training-09.json",
+    "evals/commerce_reasoning/evolution/EV-training-10.json",
+    "evals/commerce_reasoning/evolution/EV-training-11.json",
+    "evals/commerce_reasoning/evolution/EV-training-12.json"
+  ]
+}

@@ -17,7 +17,7 @@ export type ChangeAction = "apply" | "discard";
 
 export interface MerchantChat<TChange extends ChangeRef> extends AgentTurn {
   /** Goes through the same gate as the agent's own apply/discard. */
-  actOnChange: (changeId: string, action: ChangeAction) => Promise<TChange | null>;
+  actOnChange: (changeId: string, action: ChangeAction, previewDigest?: string) => Promise<TChange | null>;
 }
 
 /** Chips written for the staged state go stale once the change moves on. */
@@ -82,9 +82,10 @@ export function useMerchantChat<TChange extends ChangeRef>(
   setItemsRef.current = turn.setItems;
 
   const actOnChange = useCallback(
-    async (changeId: string, action: ChangeAction) => {
+    async (changeId: string, action: ChangeAction, previewDigest?: string) => {
       const data = await api.post<{ change: TChange | null }>(
         `/changes/${encodeURIComponent(changeId)}/${action}`,
+        previewDigest ? { preview_digest: previewDigest } : undefined,
       );
       const change = data?.change ?? null;
       if (change) {

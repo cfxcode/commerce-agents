@@ -13,6 +13,17 @@ from merchant_agent import MerchantAgentConfig
 from shopping_agent import ShoppingAgentConfig
 
 
+def build_reasoning_config():
+    from commerce_reasoning import ReasoningConfig
+    from demo_common import REPO_ROOT
+
+    path = REPO_ROOT / os.environ.get("COMMERCE_REASONING_CONFIG", "configs/reasoning.yaml")
+    config = ReasoningConfig.from_file(path) if path.exists() else ReasoningConfig()
+    if os.environ.get("COMMERCE_REASONING_ENABLED") is not None:
+        config.enabled = os.environ["COMMERCE_REASONING_ENABLED"] == "1"
+    return config
+
+
 def _model_settings() -> dict[str, str]:
     """Allow local Anthropic-compatible gateways to override the demo models."""
     model = os.environ.get("COMMERCE_MODEL")

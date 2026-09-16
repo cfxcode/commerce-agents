@@ -1,0 +1,7 @@
+reasoning_config: configs/reasoning.yaml
+max_candidates: 1
+repetitions: 3
+max_token_ratio: 1.5
+training_manifest: evals/commerce_reasoning/manifests/training.json
+validation_manifest: evals/commerce_reasoning/manifests/validation.json
+test_manifest: evals/commerce_reasoning/manifests/test.json

@@ -181,10 +181,17 @@ class EagerDispatcher:
     error and malformed-stream backstop; a started task must not outlive its turn."""
 
     def __init__(
-        self, execute: Callable[[str, dict[str, Any]], Awaitable[ToolOutcome]], enabled: bool
+        self,
+        execute: Callable[[str, dict[str, Any]], Awaitable[ToolOutcome]],
+        enabled: bool,
+        *,
+        serial: bool = False,
+        execute_call: Callable[[str, dict[str, Any], str], Awaitable[ToolOutcome]] | None = None,
     ) -> None:
         self._execute = execute
-        self._enabled = enabled
+        self._enabled = enabled and not serial
+        self._serial = serial
+        self._execute_call = execute_call
         self._tasks: dict[str, asyncio.Future[ToolOutcome]] = {}
 
     def started(self, tool_use_id: str) -> bool:
@@ -208,6 +215,22 @@ class EagerDispatcher:
         self._tasks[tool_use_id] = settled
 
     async def collect(self, tool_uses: list[Any]) -> list[ToolOutcome]:
+        if self._serial:
+            outcomes = []
+            for block in tool_uses:
+                if block.id in self._tasks:
+                    outcome = await self._tasks[block.id]
+                else:
+                    call = (
+                        self._execute_call(block.name, dict(block.input or {}), block.id)
+                        if self._execute_call
+                        else self._execute(block.name, dict(block.input or {}))
+                    )
+                    task = asyncio.ensure_future(call)
+                    self._tasks[block.id] = task
+                    outcome = await task
+                outcomes.append(outcome)
+            return outcomes
         return await asyncio.gather(
             *(
                 self._tasks[block.id]
@@ -216,6 +239,22 @@ class EagerDispatcher:
                 for block in tool_uses
             )
         )
+
+    def completed(self) -> dict[str, ToolOutcome]:
+        """Preserve completed writes if a later call is interrupted."""
+        results = {
+            key: task.result()
+            for key, task in self._tasks.items()
+            if task.done() and not task.cancelled() and task.exception() is None
+        }
+        if self._serial:
+            for key in self._tasks:
+                if key not in results:
+                    results[key] = ToolOutcome.error(
+                        "Execution was interrupted and its effect may be unknown. "
+                        "Reconcile using reads or host assistance before any write retry."
+                    )
+        return results
 
     def cancel(self) -> None:
         for task in self._tasks.values():

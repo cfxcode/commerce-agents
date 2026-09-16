@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "case_id": "EV-validation-01",
+  "scenario": "商品族",
+  "target": "AR-1902",
+  "stock": 17,
+  "sales": 90,
+  "target_days": 21,
+  "task_text": "请为 AR-1902 做单个商品的库存评估。用近30天销量计算覆盖21天的补货方案，只暂存供我核对。",
+  "expected": {
+    "delta": 0,
+    "applied": 0,
+    "pending": 0,
+    "phases": [
+      "NEED_INPUT",
+      "READ_LISTING"
+    ]
+  },
+  "host_action": null,
+  "family_group": "family"
+}

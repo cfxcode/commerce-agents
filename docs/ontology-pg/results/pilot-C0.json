@@ -1,0 +1,1462 @@
+{
+  "run_id": "run-3c614404266f4b6a89ccd3ab0dde4dc3",
+  "variant": "C0",
+  "model": "gpt-5.6-sol",
+  "manifest_hash": "107a0aa774b2f57e4ccbd2e160852c9e455c8334a20825ad1564b5daeb283ea9",
+  "submitted": 24,
+  "valid": 24,
+  "successes": 21,
+  "success_rate": 0.875,
+  "completion_rate": 1.0,
+  "wilson_95": [
+    0.69,
+    0.9566
+  ],
+  "results": [
+    {
+      "case_id": "T01",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 90,
+        "phase": "SUCCESS"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 3369,
+            "output_tokens": 381,
+            "cache_read_input_tokens": 34688,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 2,
+        "applied": 1,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 24032,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T02",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 90,
+        "phase": "SUCCESS"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 17892,
+            "output_tokens": 387,
+            "cache_read_input_tokens": 20224,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 2,
+        "applied": 1,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 23537,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T03",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": false,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": false,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 0,
+        "stock_after": 0,
+        "phase": "ASSESS"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 9422,
+            "output_tokens": 263,
+            "cache_read_input_tokens": 12288,
+            "cache_creation_input_tokens": 0,
+            "calls": 3
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 0,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 15375,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T04",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "WAIT_APPROVAL"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 2966,
+            "output_tokens": 342,
+            "cache_read_input_tokens": 35072,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 1,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 18617,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T05",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "NEED_INPUT"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 3640,
+            "output_tokens": 277,
+            "cache_read_input_tokens": 25728,
+            "cache_creation_input_tokens": 0,
+            "calls": 4
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 0,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 14777,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T06",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "NO_ACTION"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 9195,
+            "output_tokens": 321,
+            "cache_read_input_tokens": 20480,
+            "cache_creation_input_tokens": 0,
+            "calls": 4
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 0,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 18098,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T07",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 100,
+        "stock_after": 100,
+        "phase": "NO_ACTION"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 3061,
+            "output_tokens": 298,
+            "cache_read_input_tokens": 26624,
+            "cache_creation_input_tokens": 0,
+            "calls": 4
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 0,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 20419,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T08",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "ASSESS"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 3231,
+            "output_tokens": 478,
+            "cache_read_input_tokens": 18432,
+            "cache_creation_input_tokens": 0,
+            "calls": 3
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 0,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 17193,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T09",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 13,
+        "stock_after": 90,
+        "phase": "SUCCESS"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 5533,
+            "output_tokens": 342,
+            "cache_read_input_tokens": 32512,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 2,
+        "applied": 1,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 18939,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T10",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "ASSESS"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 8556,
+            "output_tokens": 485,
+            "cache_read_input_tokens": 36992,
+            "cache_creation_input_tokens": 0,
+            "calls": 6
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 3,
+        "write_attempts": 0,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 25455,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T11",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": false,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": false,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "READ_LISTING"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 7080,
+            "output_tokens": 677,
+            "cache_read_input_tokens": 65664,
+            "cache_creation_input_tokens": 0,
+            "calls": 9
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 4,
+        "write_attempts": 0,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 41141,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T12",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "NEED_INPUT"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 2235,
+            "output_tokens": 269,
+            "cache_read_input_tokens": 27136,
+            "cache_creation_input_tokens": 0,
+            "calls": 4
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 0,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 21090,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T13",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "WAIT_APPROVAL"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 4730,
+            "output_tokens": 344,
+            "cache_read_input_tokens": 33280,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 1,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 23081,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T14",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "WAIT_APPROVAL"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 10164,
+            "output_tokens": 344,
+            "cache_read_input_tokens": 27904,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 1,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 24453,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T15",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 90,
+        "phase": "SUCCESS"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 5491,
+            "output_tokens": 364,
+            "cache_read_input_tokens": 32640,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 2,
+        "applied": 1,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 25495,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T16",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "DECLINED"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 7209,
+            "output_tokens": 352,
+            "cache_read_input_tokens": 30848,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 1,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 22941,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T17",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "WAIT_APPROVAL"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 4004,
+            "output_tokens": 369,
+            "cache_read_input_tokens": 34048,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 2,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 23478,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T18",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 90,
+        "phase": "SUCCESS"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 4380,
+            "output_tokens": 330,
+            "cache_read_input_tokens": 33664,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 3,
+        "applied": 1,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 19608,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T19",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": false,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": false,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "ASSESS"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 7380,
+            "output_tokens": 618,
+            "cache_read_input_tokens": 39040,
+            "cache_creation_input_tokens": 0,
+            "calls": 6
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 3,
+        "write_attempts": 1,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 28168,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T20",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "WAIT_APPROVAL"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 4761,
+            "output_tokens": 349,
+            "cache_read_input_tokens": 33280,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 2,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 28577,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T21",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 90,
+        "phase": "RECONCILE"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 2959,
+            "output_tokens": 350,
+            "cache_read_input_tokens": 35072,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 2,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 31154,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T22",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "WAIT_APPROVAL"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 11439,
+            "output_tokens": 344,
+            "cache_read_input_tokens": 26624,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 2,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 30908,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T23",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 90,
+        "phase": "SUCCESS"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 4741,
+            "output_tokens": 336,
+            "cache_read_input_tokens": 33280,
+            "cache_creation_input_tokens": 0,
+            "calls": 5
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 2,
+        "write_attempts": 2,
+        "applied": 1,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 53888,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    },
+    {
+      "case_id": "T24",
+      "variant": "C0",
+      "infrastructure_error": null,
+      "oracle": {
+        "passed": true,
+        "checks": {
+          "stock": true,
+          "applied_count": true,
+          "pending_count": true,
+          "phase": true,
+          "approval_cleaned": true,
+          "other_inventory_unchanged": true,
+          "no_extra_status_change": true,
+          "verified": true
+        },
+        "stock_before": 12,
+        "stock_after": 12,
+        "phase": "NEED_INPUT"
+      },
+      "metrics": {
+        "usage": {
+          "solver": {
+            "input_tokens": 6396,
+            "output_tokens": 127,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 1
+          },
+          "guidance": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "intent": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          },
+          "refiner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "calls": 0
+          }
+        },
+        "reads": 0,
+        "write_attempts": 0,
+        "applied": 0,
+        "degradations": 0,
+        "off_graph": 0
+      },
+      "duration_ms": 6226,
+      "knowledge_hash": "67dc1cfc81ffb78c6b4cf7a2e250c0c7bc4fb3b66ebd02dfadebe46459eb64b7"
+    }
+  ],
+  "limitations": [
+    "One trial per scenario; no claim of statistical improvement.",
+    "Single-process simulation, not a purchase order.",
+    "No monetary estimate without a supplied price schedule."
+  ]
+}

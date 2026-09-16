@@ -6,8 +6,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AssistantRail,
+  Button,
   Inspector,
   LanguageSwitcher,
+  Notice,
+  PageHeader,
   type PortalNavItem,
   PortalShell,
   type Prefill,
@@ -21,11 +24,12 @@ import AssistantPanel from "@/components/AssistantPanel";
 import CatalogView from "@/components/views/CatalogView";
 import HomeView from "@/components/views/HomeView";
 import InventoryView from "@/components/views/InventoryView";
+import ReasoningView from "@/components/views/ReasoningView";
 import OrdersView from "@/components/views/OrdersView";
 import { api, fetchOverview, UNREACHABLE } from "@/lib/api";
 import type { StagedChange } from "@/lib/types";
 
-type PortalView = "home" | "catalog" | "orders" | "inventory";
+type PortalView = "home" | "catalog" | "orders" | "inventory" | "reasoning";
 
 function StoreMark() {
   return (
@@ -72,6 +76,7 @@ export default function PortalPage() {
   const nav = useMemo<PortalNavItem<PortalView>[]>(() => {
     const alerts = overview?.snapshot.alerts;
     return [
+      { id: "reasoning", label: locale === "zh-CN" ? "推理调试" : "Reasoning", icon: "spark" },
       { id: "home", label: t("Home"), icon: "home" },
       { id: "catalog", label: t("Catalog"), icon: "tag" },
       { id: "orders", label: t("Orders"), icon: "inbox", attention: alerts?.order_issues || null },
@@ -130,9 +135,30 @@ export default function PortalPage() {
             {view === "orders" ? (
               <OrdersView refreshKey={refreshKey} recentOrders={overview?.recent_orders ?? (overviewFailed ? [] : null)} onAskAssistant={askAssistant} />
             ) : null}
+            {view === "reasoning" ? <ReasoningView refreshKey={refreshKey} sessionId={session.sessionId} /> : null}
             {view === "inventory" ? <InventoryView refreshKey={refreshKey} onAskAssistant={askAssistant} /> : null}
           </>
-        ) : null}
+        ) : (
+          <div className="space-y-5">
+            <PageHeader title={nav.find((item) => item.id === view)?.label ?? t("Merchant workspace")} />
+            <Notice>
+              <div role={session.status === "failed" ? "alert" : "status"}>
+                <h2 className="font-semibold text-(--ink)">
+                  {t(session.status === "failed" ? "Unable to connect to the store" : "Connecting to the store…")}
+                </h2>
+                <p className="mt-2">
+                  {t(session.status === "failed" ? UNREACHABLE : "Loading your workspace. This usually takes a moment.")}
+                </p>
+                {session.status === "failed" ? (
+                  <>
+                    <p className="mt-2 break-all text-xs">{t("Service address")}: {api.root}</p>
+                    <Button variant="primary" className="mt-4" onClick={session.retry}>{t("Try again")}</Button>
+                  </>
+                ) : null}
+              </div>
+            </Notice>
+          </div>
+        )}
       </PortalShell>
       {activityOpen ? (
         <Inspector

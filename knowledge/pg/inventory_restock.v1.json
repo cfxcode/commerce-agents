@@ -1,0 +1,357 @@
+{
+  "schema_version": "1.0",
+  "graph_id": "inventory_restock",
+  "version": "1.0.0",
+  "ontology_version": "1.0.0",
+  "entry_node": "START",
+  "metadata": {
+    "status": "manual_seed",
+    "parent_version": null,
+    "upstream_commit": "fd4d59224ab96b43c6dc6888207c67b3bd5a24cf",
+    "source_refs": [
+      "P01:p2",
+      "P02:section3",
+      "R09"
+    ],
+    "inference_is_soft_guidance": true,
+    "publication_requires_validation": true,
+    "skill_path": "merchant-agent/skills/inventory-operations/SKILL.md",
+    "skill_sha256": "706fe59d30b5a9d370a7164886c7d11f6d21e8c0474604f86e15be3a1da8d267"
+  },
+  "nodes": [
+    {
+      "id": "START",
+      "kind": "state",
+      "label": "新任务开始",
+      "state_ref": "task_started"
+    },
+    {
+      "id": "READ_ALERTS",
+      "kind": "action",
+      "label": "读取库存告警",
+      "action_ref": "ReadInventoryAlerts"
+    },
+    {
+      "id": "READ_LISTING",
+      "kind": "action",
+      "label": "读取目标商品／规格",
+      "action_ref": "ReadListing"
+    },
+    {
+      "id": "READ_PENDING",
+      "kind": "action",
+      "label": "读取当前待处理变更",
+      "action_ref": "ReadPendingChanges"
+    },
+    {
+      "id": "ASSESS",
+      "kind": "decision",
+      "label": "评估证据及冲突",
+      "state_ref": "assessment_ready"
+    },
+    {
+      "id": "CALCULATE",
+      "kind": "action",
+      "label": "计算补货方案",
+      "action_ref": "CalculateRestockPlan"
+    },
+    {
+      "id": "STAGE",
+      "kind": "action",
+      "label": "暂存补货变更",
+      "action_ref": "StageRestock"
+    },
+    {
+      "id": "WAIT_APPROVAL",
+      "kind": "state",
+      "label": "预览后等待宿主",
+      "state_ref": "waiting_for_host"
+    },
+    {
+      "id": "VERIFY",
+      "kind": "action",
+      "label": "验证已应用的效果",
+      "action_ref": "VerifyAppliedChange"
+    },
+    {
+      "id": "RECONCILE",
+      "kind": "state",
+      "label": "执行结果待核对",
+      "state_ref": "outcome_unknown"
+    },
+    {
+      "id": "NEED_INPUT",
+      "kind": "terminal",
+      "label": "请求补充信息",
+      "state_ref": "needs_input"
+    },
+    {
+      "id": "REVIEW_EXISTING",
+      "kind": "terminal",
+      "label": "复核已有变更",
+      "state_ref": "review_existing"
+    },
+    {
+      "id": "NO_ACTION",
+      "kind": "terminal",
+      "label": "有依据地不操作",
+      "state_ref": "no_action"
+    },
+    {
+      "id": "SUCCESS",
+      "kind": "terminal",
+      "label": "应用并验证成功",
+      "state_ref": "success"
+    },
+    {
+      "id": "DECLINED",
+      "kind": "terminal",
+      "label": "宿主拒绝／丢弃",
+      "state_ref": "declined"
+    }
+  ],
+  "edges": [
+    {
+      "id": "E01",
+      "source": "START",
+      "relation": "LEADS_TO",
+      "target": "READ_ALERTS",
+      "condition": "未明确目标",
+      "guidance": "读取告警以定位候选，必要时澄清。",
+      "pitfalls": "不要任意选择商品写入。",
+      "predicate_id": "target_missing",
+      "priority": 99
+    },
+    {
+      "id": "E02",
+      "source": "START",
+      "relation": "LEADS_TO",
+      "target": "READ_LISTING",
+      "condition": "目标已明确",
+      "guidance": "读取目标完整记录并确认对象类型。",
+      "pitfalls": "用户提供id不是provenance。",
+      "predicate_id": "has_target",
+      "priority": 98
+    },
+    {
+      "id": "E03",
+      "source": "READ_ALERTS",
+      "relation": "LEADS_TO",
+      "target": "READ_LISTING",
+      "condition": "已确定单一目标",
+      "guidance": "读取完整商品或规格。",
+      "pitfalls": "告警读取未建立上游seen_listings。",
+      "predicate_id": "has_target",
+      "priority": 97
+    },
+    {
+      "id": "E04",
+      "source": "READ_ALERTS",
+      "relation": "LEADS_TO",
+      "target": "NO_ACTION",
+      "condition": "完整告警为空且任务只要求检查",
+      "guidance": "报告范围内未发现告警。",
+      "pitfalls": "空告警不证明所有业务健康。",
+      "predicate_id": "no_alerts_for_check_only",
+      "priority": 96
+    },
+    {
+      "id": "E05",
+      "source": "READ_LISTING",
+      "relation": "LEADS_TO",
+      "target": "READ_PENDING",
+      "condition": "目标有效且可用于本任务",
+      "guidance": "刷新当前队列快照。",
+      "pitfalls": "历史seen_changes不是当前队列。",
+      "predicate_id": "has_valid_listing",
+      "priority": 95
+    },
+    {
+      "id": "E06",
+      "source": "READ_LISTING",
+      "relation": "LEADS_TO",
+      "target": "NEED_INPUT",
+      "condition": "目标不存在、含糊或分类冲突",
+      "guidance": "请求必要的目标／规格信息。",
+      "pitfalls": "不猜测其他目标。",
+      "predicate_id": "target_needs_clarification",
+      "priority": 94
+    },
+    {
+      "id": "E07",
+      "source": "READ_PENDING",
+      "relation": "LEADS_TO",
+      "target": "ASSESS",
+      "condition": "收到标注覆盖情况的队列观察",
+      "guidance": "检查完整性、当前性与同目标冲突。",
+      "pitfalls": "部分响应不能证明没有待处理变更。",
+      "predicate_id": "pending_snapshot_observed",
+      "priority": 93
+    },
+    {
+      "id": "E08",
+      "source": "ASSESS",
+      "relation": "LEADS_TO",
+      "target": "REVIEW_EXISTING",
+      "condition": "同目标存在待处理库存变更",
+      "guidance": "复核已有变更，不新建重复方案。",
+      "pitfalls": "暂存数量不等于可用库存。",
+      "predicate_id": "pending_present",
+      "priority": 92
+    },
+    {
+      "id": "E09",
+      "source": "ASSESS",
+      "relation": "LEADS_TO",
+      "target": "CALCULATE",
+      "condition": "输入有效且完整队列中无冲突",
+      "guidance": "调用确定性计算工具。",
+      "pitfalls": "不让LLM自报库存和销量。",
+      "predicate_id": "ready_to_calculate",
+      "priority": 91
+    },
+    {
+      "id": "E10",
+      "source": "ASSESS",
+      "relation": "LEADS_TO",
+      "target": "NEED_INPUT",
+      "condition": "数据未知、冲突或无法补读",
+      "guidance": "说明缺少什么及其影响。",
+      "pitfalls": "不能把None当0。",
+      "predicate_id": "needs_data",
+      "priority": 90
+    },
+    {
+      "id": "E11",
+      "source": "CALCULATE",
+      "relation": "LEADS_TO",
+      "target": "STAGE",
+      "condition": "方案为正且在当前限制内",
+      "guidance": "核对目标、Q和版本后暂存。",
+      "pitfalls": "不修改公式、不规避上限。",
+      "predicate_id": "positive_plan",
+      "priority": 89
+    },
+    {
+      "id": "E12",
+      "source": "CALCULATE",
+      "relation": "LEADS_TO",
+      "target": "NO_ACTION",
+      "condition": "计算结果不需要正向自动补货",
+      "guidance": "提供不操作的计算依据。",
+      "pitfalls": "不创建零数量变更。",
+      "predicate_id": "zero_plan",
+      "priority": 88
+    },
+    {
+      "id": "E13",
+      "source": "CALCULATE",
+      "relation": "LEADS_TO",
+      "target": "NEED_INPUT",
+      "condition": "缺数据或方案超过规则范围",
+      "guidance": "请求处理输入或人工决策。",
+      "pitfalls": "不得截断或拆单绕过上限。",
+      "predicate_id": "plan_unavailable",
+      "priority": 87
+    },
+    {
+      "id": "E14",
+      "source": "STAGE",
+      "relation": "LEADS_TO",
+      "target": "WAIT_APPROVAL",
+      "condition": "暂存成功且预览已渲染",
+      "guidance": "说明尚未生效，等待宿主入口。",
+      "pitfalls": "自动预览无需重复展示，不能自动批准。",
+      "predicate_id": "staged_ok",
+      "priority": 86
+    },
+    {
+      "id": "E15",
+      "source": "STAGE",
+      "relation": "LEADS_TO",
+      "target": "READ_LISTING",
+      "condition": "方案过期且重查预算尚在",
+      "guidance": "废弃旧方案并重新读取。",
+      "pitfalls": "重查不是重放写入。",
+      "predicate_id": "stage_stale_retry_allowed",
+      "priority": 85
+    },
+    {
+      "id": "E16",
+      "source": "STAGE",
+      "relation": "LEADS_TO",
+      "target": "REVIEW_EXISTING",
+      "condition": "原子检查发现同目标冲突",
+      "guidance": "复核已有变更并结束本轮。",
+      "pitfalls": "不重建新id绕过冲突。",
+      "predicate_id": "stage_conflict",
+      "priority": 84
+    },
+    {
+      "id": "E17",
+      "source": "WAIT_APPROVAL",
+      "relation": "LEADS_TO",
+      "target": "VERIFY",
+      "condition": "可信宿主应用成功事件",
+      "guidance": "读取当前业务状态并核对执行回执。",
+      "pitfalls": "不要再次调用apply。",
+      "predicate_id": "host_applied",
+      "priority": 83
+    },
+    {
+      "id": "E18",
+      "source": "WAIT_APPROVAL",
+      "relation": "LEADS_TO",
+      "target": "DECLINED",
+      "condition": "可信宿主丢弃事件",
+      "guidance": "记录拒绝和结束原因。",
+      "pitfalls": "不生成相同新单绕过拒绝。",
+      "predicate_id": "host_discarded",
+      "priority": 82
+    },
+    {
+      "id": "E19",
+      "source": "WAIT_APPROVAL",
+      "relation": "LEADS_TO",
+      "target": "RECONCILE",
+      "condition": "真实应用结果不确定",
+      "guidance": "仅查询或请求人工核对。",
+      "pitfalls": "超时不证明无副作用。",
+      "predicate_id": "apply_unknown",
+      "priority": 81
+    },
+    {
+      "id": "E20",
+      "source": "VERIFY",
+      "relation": "LEADS_TO",
+      "target": "SUCCESS",
+      "condition": "授权效果已经验证",
+      "guidance": "报告可核查的完成结果。",
+      "pitfalls": "不能只凭模型自报成功。",
+      "predicate_id": "verified",
+      "priority": 80
+    },
+    {
+      "id": "E21",
+      "source": "VERIFY",
+      "relation": "LEADS_TO",
+      "target": "RECONCILE",
+      "condition": "结果不一致或仍未知",
+      "guidance": "记录差异和未验证状态。",
+      "pitfalls": "不自动反向补货。",
+      "predicate_id": "verification_failed",
+      "priority": 79
+    },
+    {
+      "id": "E22",
+      "source": "RECONCILE",
+      "relation": "LEADS_TO",
+      "target": "VERIFY",
+      "condition": "已取得可判定的应用结果",
+      "guidance": "重新读取并核查效果。",
+      "pitfalls": "不重新发起副作用。",
+      "predicate_id": "reconciliation_ready",
+      "priority": 78
+    }
+  ]
+}

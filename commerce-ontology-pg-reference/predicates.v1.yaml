@@ -1,0 +1,74 @@
+schema_version: '1.0'
+status: design_reference_not_implemented
+evaluation: registered_python_functions_only_no_eval
+truth_values:
+- 'true'
+- 'false'
+- unknown
+predicates:
+- id: target_missing
+  semantics: 任务目标确知尚未选择；任务输入不可解析则unknown。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: has_target
+  semantics: 宿主确认的task target存在且唯一；不能只由建议文本产生。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: no_alerts_for_check_only
+  semantics: 任务仅查告警，响应完整有效且告警为空；任何未知返回unknown。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: has_valid_listing
+  semantics: 完整读取、同租户、可分类且符合任务目标。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: target_needs_clarification
+  semantics: 已确认不存在／含糊／分类无效。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: pending_snapshot_observed
+  semantics: 成功接收带coverage的结构化快照；失败不是空快照。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: pending_present
+  semantics: 当前完整队列中发现同目标staged库存变更。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: pending_absent
+  semantics: 当前完整有效队列无同目标staged库存变更。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: ready_to_calculate
+  semantics: valid target AND fresh inputs AND pending_absent；三值AND。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: needs_data
+  semantics: 评估发现至少一个必需字段未知／过期／冲突且本轮无法补读。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: positive_plan
+  semantics: 当前有效方案Q>0且不超当前限制，无输入版本冲突。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: zero_plan
+  semantics: 已知Q=0，或按已固定zero-sales策略不自动补货；不是计算失败。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: plan_unavailable
+  semantics: 确定性工具返回needs_data或out_of_policy，而非任意文本。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: staged_ok
+  semantics: 暂存成功、change_id已登记，预览成功渲染且库存未应用。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: stage_stale_retry_allowed
+  semantics: stage以STALE_PLAN阻断且recovery_reads剩余>0。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: stage_conflict
+  semantics: stage以PENDING_CHANGE_CONFLICT阻断。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: host_applied
+  semantics: 同task/change/digest的可信host应用成功事件，不读取聊天文字判断。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: host_discarded
+  semantics: 同task/change的可信host丢弃成功事件。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: apply_unknown
+  semantics: 执行日志状态outcome_unknown。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: verified
+  semantics: effects oracle通过，包含目标、增量、回执和一致性依据。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: verification_failed
+  semantics: effects oracle不通过或缺必要证据。
+  implementation: TO_IMPLEMENT_AND_TEST
+- id: reconciliation_ready
+  semantics: 已由受控核对路径取得足以验证的执行结果。
+  implementation: TO_IMPLEMENT_AND_TEST

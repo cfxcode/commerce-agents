@@ -18,7 +18,7 @@ Python 3.11+ and Node 22. Clone, install, add a key, run a vertical:
 ```bash
 git clone https://github.com/anthropics/commerce-agents.git && cd commerce-agents
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt       # the seven packages and their pinned dependencies
+pip install -r requirements.txt       # the eight packages and their pinned dependencies
 cp .env.example .env                  # add ANTHROPIC_API_KEY
 (cd examples && npm ci)               # the eight web apps share one workspace
 python scripts/run_demo.py retail     # API :8000 + storefront :3000
@@ -44,6 +44,15 @@ The command asks about your stack, plays the plan back, and builds the project; 
 and `/author-commerce-evals` continue from there, and `/review-commerce-agent` starts from an agent
 that already exists ([`plugins/commerce-builder/`](plugins/commerce-builder/)). Each command also
 runs when a request matches its description, so naming it is optional.
+
+## Ontology and procedural guidance
+
+The retail merchant includes controlled restock execution, auditable evidence, and an optional procedural graph. The portal has a bilingual, read-only reasoning inspector. Guidance defaults off; execution checks and host approval remain active. See [the setup and validation guide](docs/ontology-pg/README.md).
+
+```bash
+python -m commerce_reasoning.cli validate-knowledge --config configs/reasoning.yaml
+COMMERCE_REASONING_ENABLED=1 python scripts/run_demo.py retail --merchant
+```
 
 ## The two agents
 

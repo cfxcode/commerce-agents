@@ -43,7 +43,6 @@ from merchant_agent import (
     PricingContext,
     StagedChange,
 )
-from merchant_agent.executor import MerchantToolExecutor
 from merchant_agent_runtime import MerchantAgent
 
 from .host import DemoStorefront, append_user_turn, stream_turn
@@ -104,6 +103,10 @@ class MerchantChatRequest(BaseModel):
 
 class MerchantResetRequest(BaseModel):
     purge_memory: bool = False
+
+
+class ChangeActionRequest(BaseModel):
+    preview_digest: str | None = Field(default=None, max_length=64)
 
 
 def _dump(model: Any) -> dict[str, Any]:
@@ -241,7 +244,9 @@ def build_merchant_router(
     for path, read in (portal_reads or {}).items():
         router.add_api_route(path, portal_route(read), methods=["GET"])
 
-    async def change_action(change_id: str, action: str, record: MerchantRecord) -> dict:
+    async def change_action(
+        change_id: str, action: str, record: MerchantRecord, preview_digest: str | None = None
+    ) -> dict:
         """``{"ok": true, "change": record}`` when the change moved; ``{"ok": false,
         "change": null, "reason": text}`` when a gate held it; 400 when the call failed.
         A click on the preview card is the host's own approval or dismissal, so the id is
@@ -251,17 +256,21 @@ def build_merchant_router(
             record.state.approved_change_ids.add(change_id)
         else:
             record.state.host_action_change_ids.add(change_id)
-        executor = MerchantToolExecutor(
-            backend=backend,
-            config=agent.config,
-            skills=agent.skills,
-            session=context(record),
-            state=record.state,
-            memory=agent.memory,
-        )
-        execution = await executor.execute(action, {"change_id": change_id})
-        record.state.host_action_change_ids.discard(change_id)
-        record.state.approved_change_ids.discard(change_id)
+        try:
+            executor = agent.create_executor(
+                backend=backend,
+                config=agent.config,
+                skills=agent.skills,
+                session=context(record),
+                state=record.state,
+                memory=agent.memory,
+                origin="host",
+                preview_digest=preview_digest,
+            )
+            execution = await executor.execute(action, {"change_id": change_id})
+        finally:
+            record.state.host_action_change_ids.discard(change_id)
+            record.state.approved_change_ids.discard(change_id)
         if execution.is_error:
             raise HTTPException(status_code=400, detail=execution.result_text)
         if execution.blocked is not None:
@@ -281,12 +290,47 @@ def build_merchant_router(
         return {"ok": True, "change": change}
 
     @router.post("/changes/{change_id:path}/apply")
-    async def apply_change(change_id: str, record: CurrentSession) -> dict:
-        return await change_action(change_id, "apply_change", record)
+    async def apply_change(
+        change_id: str, record: CurrentSession, request: ChangeActionRequest | None = None
+    ) -> dict:
+        return await change_action(
+            change_id, "apply_change", record, request.preview_digest if request else None
+        )
 
     @router.post("/changes/{change_id:path}/discard")
     async def discard_change(change_id: str, record: CurrentSession) -> dict:
         return await change_action(change_id, "discard_change", record)
+
+    reasoning = getattr(agent, "execution_service", None)
+    if reasoning is not None and reasoning.config.debug_enabled:
+
+        @router.get("/reasoning/tasks")
+        async def reasoning_tasks(record: CurrentSession) -> dict:
+            return {
+                "tasks": reasoning.debug_tasks(context(record)),
+                "enabled": reasoning.config.enabled,
+            }
+
+        @router.get("/reasoning/tasks/{task_id}")
+        async def reasoning_task(task_id: str, record: CurrentSession) -> dict:
+            try:
+                return reasoning.debug_task(context(record), task_id)
+            except LookupError:
+                raise HTTPException(404, "Task not found") from None
+
+        @router.get("/reasoning/tasks/{task_id}/events")
+        async def reasoning_events(
+            task_id: str, record: CurrentSession, after: int = 0, limit: int = 100
+        ) -> dict:
+            try:
+                reasoning.debug_task(context(record), task_id)
+            except LookupError:
+                raise HTTPException(404, "Task not found") from None
+            return {
+                "events": reasoning.store.events(
+                    identity.merchant_id, task_id, max(0, after), max(1, min(limit, 200))
+                )
+            }
 
     install_memory_routes(
         router, "/memory", current_session=CurrentSession, memory_store=memory_store

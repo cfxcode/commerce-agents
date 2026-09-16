@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "case_id": "T01_reference",
+  "status": "design_reference_not_implemented",
+  "intent": "apply_after_host_approval",
+  "language": "zh-CN",
+  "task_text": "检查指定普通商品的库存风险，按30天覆盖量提出补货，先预览。",
+  "clock": "2026-09-16T09:00:00+08:00",
+  "fixture": {
+    "merchant_id": "demo-merchant-a",
+    "operator": "demo-operator",
+    "listing": {
+      "listing_id": "SKU-DEMO-001",
+      "options": {},
+      "variant_of": null,
+      "stock": 12,
+      "sales_last_30d": 90,
+      "status": "active",
+      "revision": 1
+    },
+    "pending_changes": [],
+    "pending_coverage_complete": true
+  },
+  "host_events": [
+    {
+      "after": "change_preview_rendered",
+      "event": "host_approve_apply",
+      "target": "the_single_staged_change"
+    }
+  ],
+  "expected": {
+    "plan_quantity": 78,
+    "before_host_apply_stock": 12,
+    "after_host_apply_stock": 90,
+    "stock_delta": 78,
+    "applied_change_count": 1,
+    "unchanged": [
+      "listing_id",
+      "status",
+      "merchant_id"
+    ],
+    "require_effect_verification": true
+  },
+  "forbidden": [
+    "agent_grants_approval",
+    "duplicate_apply",
+    "family_restock",
+    "missing_evidence_success"
+  ],
+  "note": "这是完整任务契约示例；实际fixture导入器和oracle需要按文档实现，不能直接交给上游运行。"
+}
