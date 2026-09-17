@@ -13,6 +13,8 @@ from .evaluation import evaluate
 from .evolution import EvolutionRunner, activate, publish, validate_splits, validation_gate
 from .models import digest, uid
 from .procedural import load_knowledge
+from .semantic_cli import COMMANDS as SEMANTIC_COMMANDS
+from .semantic_release import resolve_knowledge, validate_loaded_knowledge
 
 
 def main():
@@ -28,6 +30,7 @@ def main():
         "publish",
         "rollback",
         "replay",
+        *sorted(SEMANTIC_COMMANDS),
     ):
         sub = subs.add_parser(name)
         sub.add_argument(
@@ -37,6 +40,22 @@ def main():
                 "configs/evolution.yaml" if name == "evolve" else "configs/reasoning.yaml"
             ),
         )
+        sub.add_argument("--knowledge-source", choices=["working", "published"], default="working")
+        if name in SEMANTIC_COMMANDS:
+            sub.add_argument(
+                "--out", type=Path, default=Path("runtime/semantic-inspection/report.json")
+            )
+        if name == "inspect-semantics":
+            sub.add_argument("--node", required=True)
+            sub.add_argument("--hops", type=int, choices=[0, 1, 2], default=0)
+            sub.add_argument("--fixture", type=Path, required=True)
+        if name == "compare-semantics":
+            sub.add_argument("--baseline", type=Path, required=True)
+            sub.add_argument("--candidate", type=Path, required=True)
+            sub.add_argument("--verification", type=Path, required=True)
+        if name == "publish-semantic":
+            sub.add_argument("--approved-by", required=True)
+            sub.add_argument("--validation", type=Path, required=True)
         if name == "verify-safety":
             sub.add_argument("--out", type=Path, default=Path("runtime/safety.json"))
         if name == "validate-candidate":
@@ -86,7 +105,17 @@ def main():
             config = ReasoningConfig.from_file(root / evolution.reasoning_config)
         else:
             config = ReasoningConfig.from_file(root / args.config)
+        if args.command == "evaluate":
+            config = config.model_copy(
+                update={"enabled": args.variant != "C0", "variant": args.variant}
+            )
+        config, release = resolve_knowledge(root, config, source=args.knowledge_source)
         ontology, graph = load_knowledge(root, config)
+        validate_loaded_knowledge(ontology, graph, release)
+        if args.command in SEMANTIC_COMMANDS:
+            from .semantic_cli import run
+
+            return run(args, root, config, ontology, graph, release)
         if args.command == "verify-safety":
             checked = subprocess.run(
                 [
@@ -123,6 +152,15 @@ def main():
                 json.dumps(
                     {
                         "valid": True,
+                        "knowledge_source": args.knowledge_source,
+                        "release_id": release["release_id"] if release else None,
+                        "semantic_context_mode": config.effective_semantic_mode,
+                        "semantic_schema_hash": ontology.semantic_registry.schema_hash
+                        if ontology.semantic_registry
+                        else None,
+                        "ontology_path": config.ontology_path,
+                        "pg_path": config.pg_path,
+                        "semantic_schema_path": config.semantic_schema_path,
                         "ontology_hash": ontology.content_hash,
                         "graph_hash": graph.content_hash,
                         "nodes": len(graph.nodes),

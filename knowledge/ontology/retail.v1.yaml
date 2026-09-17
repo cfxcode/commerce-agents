@@ -1,6 +1,6 @@
 schema_version: '1.0'
 ontology_id: retail_operations
-version: 1.0.0
+version: 1.1.0
 status: implemented
 upstream_commit: fd4d59224ab96b43c6dc6888207c67b3bd5a24cf
 scope:
@@ -25,36 +25,47 @@ entities:
 - id: Merchant
   source: MerchantSessionContext.merchant_id
   trusted_origin: host
+  description: 业务数据所属的商家作用域；标识由可信宿主提供，不由模型声明。
 - id: Operator
   source: MerchantSessionContext.operator
   trusted_origin: host
+  description: 执行或批准操作的人类主体；此定义本身不证明身份或授权。
 - id: Listing
   source: Listing / ListingDetails
   key: listing_id
+  description: 商家经营的商品视图，可能是普通商品、商品族或具体规格。
 - id: ProductFamily
   subtype_of: Listing
   classification_rule: nonempty_options
+  description: 带多个具体规格的商品汇总对象；汇总库存不能代替规格补货目标。
 - id: SellableItem
   subtype_of: Listing
   classification_rule: not_family
+  description: 可独立管理库存的普通商品或具体规格，是补货动作允许的目标类型。
 - id: Variant
   subtype_of: SellableItem
   classification_rule: nonempty_variant_of_and_not_family
+  description: 属于一个商品族的具体规格；补货按本规格的库存与销量计算。
 - id: InventoryAlert
   source: InventoryAlert
   key: adapter_generated_observation_id
+  description: 来源系统报告的库存风险；告警本身不授予对商品的写入资格。
 - id: StagedChange
   source: StagedChange
   key: change_id
+  description: 一项待处理或已处理的字段变更；暂存、应用、丢弃是不同状态。
 - id: RestockPlan
   source: new_sidecar_model
   key: plan_id
+  description: 基于有效观察计算的补货建议及证据，不是采购单或审批凭证。
 - id: ApprovalRecord
   source: new_host_only_model
   key: approval_id
+  description: 可信宿主记录的、绑定具体变更内容的授权，不由模型生成。
 - id: Observation
   source: new_structured_result_adapter
   key: observation_id
+  description: 某次读取的事实记录，带来源、时间、范围和有效性；定义不产生实际值。
 relations:
 - id: belongs_to_merchant
   domain:
@@ -66,43 +77,51 @@ relations:
   - Observation
   range:
   - Merchant
+  description: 对象所属的商家范围，不能仅凭该关系替代执行端的租户校验。
 - id: variant_of
   domain:
   - Variant
   range:
   - ProductFamily
   max_targets: 1
+  description: 具体规格所属的商品族；不从名称相似性推断实例关系。
 - id: alert_for
   domain:
   - InventoryAlert
   range:
   - Listing
+  description: 库存告警所指的商品记录，不代表该商品已完成完整读取。
 - id: change_targets
   domain:
   - StagedChange
   range:
   - Listing
+  description: 变更所影响的商品对象；存在目标关联不代表变更已经执行。
 - id: plan_for
   domain:
   - RestockPlan
   range:
   - SellableItem
+  description: 补货方案针对的可补货对象，须与当前任务目标一致。
 - id: supported_by
   domain:
   - RestockPlan
   - StagedChange
   range:
   - Observation
+  description: 方案或变更引用的观察证据；证据当前是否有效需另外检查。
 - id: approved_by
   domain:
   - ApprovalRecord
   range:
   - Operator
+  description: 审批记录的操作者；关系定义不代表某个变更已经批准。
 - id: realized_by
   domain:
   - RestockPlan
   range:
   - StagedChange
+  description: 补货方案对应的暂存变更；创建变更不等于应用到库存。
 actions:
 - id: ReadInventoryAlerts
   tool_binding: get_inventory_alerts
@@ -113,6 +132,19 @@ actions:
   - host
   checks:
   - TENANT_SCOPE
+  description: 读取当前库存告警，不改变库存或商品写入资格。
+  semantic_refs:
+    required:
+      entities:
+      - InventoryAlert
+      - Listing
+      relations:
+      - alert_for
+      properties: []
+    optional:
+      entities: []
+      relations: []
+      properties: []
 - id: ReadListing
   tool_binding: get_listing
   effect: observe_full_listing_and_provenance
@@ -122,6 +154,25 @@ actions:
   - host
   checks:
   - TENANT_SCOPE
+  description: 读取完整商品及规格，建立有来源的观察；读取本身不改变库存。
+  semantic_refs:
+    required:
+      entities:
+      - Listing
+      relations: []
+      properties:
+      - Listing.options
+      - Listing.variant_of
+      - Listing.status
+    optional:
+      entities:
+      - Variant
+      - ProductFamily
+      relations:
+      - variant_of
+      properties:
+      - Listing.stock
+      - Listing.sales_last_30d
 - id: ReadPendingChanges
   tool_binding: get_pending_changes
   effect: replace_current_pending_snapshot
@@ -132,6 +183,21 @@ actions:
   checks:
   - TENANT_SCOPE
   - COVERAGE_CAPTURE
+  description: 读取当前待处理变更快照；失败或不完整不能解释为没有变更。
+  semantic_refs:
+    required:
+      entities:
+      - StagedChange
+      relations:
+      - change_targets
+      properties:
+      - StagedChange.status
+      - StagedChange.items
+      - Observation.coverage
+    optional:
+      entities: []
+      relations: []
+      properties: []
 - id: CalculateRestockPlan
   tool_binding: calculate_restock_plan
   effect: create_auditable_plan_no_inventory_write
@@ -144,6 +210,27 @@ actions:
   - VALID_TARGET
   - FRESH_INPUTS
   - COMPLETE_PENDING_SNAPSHOT
+  description: 用可信事实计算并记录补货建议，不修改库存；未知或过期输入需补查。
+  semantic_refs:
+    required:
+      entities:
+      - SellableItem
+      - RestockPlan
+      - Observation
+      relations:
+      - plan_for
+      - supported_by
+      properties:
+      - Listing.stock
+      - Listing.sales_last_30d
+      - RestockPlan.quantity
+      - RestockPlan.target_days
+      - Observation.value_status
+      - Observation.coverage
+    optional:
+      entities: []
+      relations: []
+      properties: []
 - id: StageRestock
   tool_binding: stage_inventory_action
   effect: create_staged_change_only
@@ -158,6 +245,28 @@ actions:
   - PLAN_MATCH
   - PENDING_CONFLICT_ATOMIC
   - UPSTREAM_GUARDRAILS
+  description: 为当前可补货目标创建与有效方案一致的暂存变更；暂存成功不表示库存已增加。
+  semantic_refs:
+    required:
+      entities:
+      - SellableItem
+      - RestockPlan
+      - StagedChange
+      relations:
+      - plan_for
+      - change_targets
+      - realized_by
+      properties:
+      - RestockPlan.quantity
+      - RestockPlan.status
+      - StagedChange.status
+    optional:
+      entities:
+      - Observation
+      relations:
+      - supported_by
+      properties:
+      - Observation.value_status
 - id: PreviewChange
   tool_binding: present_change_preview
   effect: show_existing_change_no_authorization
@@ -168,6 +277,19 @@ actions:
   checks:
   - TENANT_SCOPE
   - UPSTREAM_PROVENANCE
+  description: 展示已有暂存变更；预览和模型文字都不授予审批权限。
+  semantic_refs:
+    required:
+      entities:
+      - StagedChange
+      relations: []
+      properties:
+      - StagedChange.status
+      - StagedChange.items
+    optional:
+      entities: []
+      relations: []
+      properties: []
 - id: ApplyApprovedChange
   tool_binding: apply_change
   effect: apply_approved_delta_then_verify
@@ -182,6 +304,23 @@ actions:
   - CURRENT_REVISION
   - IDEMPOTENCY
   - ATOMIC_COMMIT
+  description: 仅由可信宿主发起，核对授权与当前状态后应用变更；随后需核验实际效果。
+  semantic_refs:
+    required:
+      entities:
+      - StagedChange
+      - ApprovalRecord
+      - Operator
+      relations:
+      - approved_by
+      - change_targets
+      properties:
+      - StagedChange.status
+      - ApprovalRecord.payload_digest
+    optional:
+      entities: []
+      relations: []
+      properties: []
 - id: DiscardChange
   tool_binding: discard_change
   effect: discard_staged_change_no_stock_rollback
@@ -193,6 +332,19 @@ actions:
   - TENANT_SCOPE
   - UPSTREAM_PROVENANCE
   - STAGED_STATUS
+  description: 丢弃仍暂存的变更，不回滚已应用库存，也不隐含创建替代方案。
+  semantic_refs:
+    required:
+      entities:
+      - StagedChange
+      relations:
+      - change_targets
+      properties:
+      - StagedChange.status
+    optional:
+      entities: []
+      relations: []
+      properties: []
 - id: VerifyAppliedChange
   tool_binding: get_listing
   effect: observe_effect_no_write
@@ -203,6 +355,24 @@ actions:
   checks:
   - TENANT_SCOPE
   - ACTION_RECEIPT
+  description: 结合回执重新读取并核验变化；验证失败或结果未知不能声称任务成功。
+  semantic_refs:
+    required:
+      entities:
+      - SellableItem
+      - StagedChange
+      - Observation
+      relations:
+      - change_targets
+      - supported_by
+      properties:
+      - Listing.stock
+      - Observation.value_status
+      - Observation.coverage
+    optional:
+      entities: []
+      relations: []
+      properties: []
 invariants:
 - family_is_not_a_restock_target
 - unknown_is_not_zero_or_absent
@@ -227,68 +397,301 @@ restock_formula:
 states:
 - id: task_started
   label: 新任务开始
+  description: 任务开始，尚无已完成业务动作的事实。
+  semantic_refs:
+    required:
+      entities: []
+      relations: []
+      properties: []
+    optional:
+      entities: []
+      relations: []
+      properties: []
 - id: assessment_ready
   label: 评估证据及冲突
+  description: 根据当前证据和待处理冲突评估下一步；信息不足必须保持未知。
+  semantic_refs:
+    required:
+      entities:
+      - SellableItem
+      - RestockPlan
+      - Observation
+      - StagedChange
+      relations:
+      - plan_for
+      - change_targets
+      properties:
+      - Listing.stock
+      - Listing.sales_last_30d
+      - Observation.value_status
+      - Observation.coverage
+    optional:
+      entities: []
+      relations: []
+      properties: []
 - id: waiting_for_host
   label: 预览后等待宿主
+  description: 变更已经暂存并展示，等待匹配的可信宿主事件；等待本身不调用应用工具。
+  semantic_refs:
+    required:
+      entities:
+      - StagedChange
+      - ApprovalRecord
+      - Operator
+      relations:
+      - approved_by
+      properties:
+      - StagedChange.status
+      - ApprovalRecord.payload_digest
+    optional:
+      entities:
+      - RestockPlan
+      relations:
+      - realized_by
+      properties: []
 - id: outcome_unknown
   label: 执行结果待核对
+  description: 执行结果尚未判定，只能核对或请求人工处理，不能盲目重试写入。
+  semantic_refs:
+    required:
+      entities:
+      - StagedChange
+      - Observation
+      relations:
+      - change_targets
+      properties:
+      - StagedChange.status
+      - Observation.value_status
+    optional:
+      entities: []
+      relations: []
+      properties: []
 - id: needs_input
   label: 请求补充信息
+  description: 缺失、冲突或未知的信息尚未解决，需要明确补充而不是自行推造。
+  semantic_refs:
+    required:
+      entities:
+      - Observation
+      relations: []
+      properties:
+      - Observation.value_status
+    optional:
+      entities: []
+      relations: []
+      properties: []
 - id: review_existing
   label: 复核已有变更
+  description: 当前存在需要复核的变更，不再创建相同新单；先检查既有内容。
+  semantic_refs:
+    required:
+      entities:
+      - StagedChange
+      relations:
+      - change_targets
+      properties:
+      - StagedChange.status
+      - StagedChange.items
+    optional:
+      entities: []
+      relations: []
+      properties: []
 - id: no_action
   label: 有依据地不操作
+  description: 有可核查的依据选择不操作；没有调用工具本身不证明目标已满足。
+  semantic_refs:
+    required:
+      entities:
+      - RestockPlan
+      - Observation
+      relations:
+      - supported_by
+      properties:
+      - RestockPlan.quantity
+      - Observation.value_status
+    optional:
+      entities: []
+      relations: []
+      properties: []
 - id: success
   label: 应用并验证成功
+  description: 业务变化已经应用且验证通过；状态定义本身不产生成功证据。
+  semantic_refs:
+    required:
+      entities:
+      - StagedChange
+      - Observation
+      relations:
+      - change_targets
+      properties:
+      - StagedChange.status
+      - Listing.stock
+    optional:
+      entities: []
+      relations: []
+      properties: []
 - id: declined
   label: 宿主拒绝／丢弃
+  description: 宿主已丢弃或拒绝变更；不得通过创建相同方案绕过拒绝。
+  semantic_refs:
+    required:
+      entities:
+      - StagedChange
+      relations: []
+      properties:
+      - StagedChange.status
+    optional:
+      entities: []
+      relations: []
+      properties: []
 check_catalog:
 - id: ACTION_RECEIPT
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 必须有可核查的实际执行回执；文字确认不替代回执。
 - id: APPROVAL_DIGEST
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 批准必须绑定当前具体变更的内容摘要。
 - id: ATOMIC_COMMIT
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 写入须在既有受控提交边界内完成，不能部分生效后报告成功。
 - id: COMPLETE_PENDING_SNAPSHOT
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 决策需要范围匹配、完整且当前的待处理队列快照。
 - id: COVERAGE_CAPTURE
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 记录读取范围、完整性与截断，不把查询失败当空集合。
 - id: CURRENT_REVISION
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 写入前检查当前业务版本与已确认方案一致。
 - id: FRESH_INPUTS
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 计算和写入使用有效、未过期且不冲突的证据。
 - id: HOST_APPROVAL
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 实际应用需要可信宿主批准；聊天文字不能替代。
 - id: IDEMPOTENCY
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 重复请求不能重复产生同一副作用。
 - id: PENDING_CONFLICT_ATOMIC
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 暂存时原子核对同目标的待处理冲突。
 - id: PLAN_MATCH
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 目标、数量、有效期和版本必须匹配当前有效方案。
 - id: STAGED_STATUS
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 仅允许处理处于正确暂存状态的变更。
 - id: TENANT_SCOPE
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 实际操作必须属于可信宿主确定的商家范围。
 - id: UPSTREAM_GUARDRAILS
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 保留并执行原项目的变更限制，不能用语义建议绕过。
 - id: UPSTREAM_PROVENANCE
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 保留原项目的来源资格检查，类型定义不产生写入资格。
 - id: VALID_TARGET
   implementation: commerce_reasoning.execution.ControlledExecutor + retail.api.reasoning_backend.ReasoningRetailMerchant
   immutable_to_refiner: true
+  description: 补货目标必须是已确认的普通商品或具体规格，不能是商品族。
+semantic_schema_version: '1.0'
+properties:
+- id: Listing.stock
+  owner_ref: Listing
+  source_field: stock
+  value_kind: integer
+  unit: units
+  description: 目标当前库存；商品族的值是汇总，不能直接用于规格补货。
+- id: Listing.sales_last_30d
+  owner_ref: Listing
+  source_field: sales_last_30d
+  value_kind: integer
+  unit: units
+  description: 完整近30天的销量依据，来自完整商品详情；缺失不等于零。
+- id: Listing.options
+  owner_ref: Listing
+  source_field: options
+  value_kind: object
+  unit: null
+  description: 商品族的规格维度；非空时应区分汇总款式与可补货规格。
+- id: Listing.variant_of
+  owner_ref: Listing
+  source_field: variant_of
+  value_kind: string
+  unit: null
+  description: 具体规格所属商品族的标识；缺失时不按名称猜测。
+- id: Listing.status
+  owner_ref: Listing
+  source_field: status
+  value_kind: string
+  unit: null
+  description: 当前经营或可售状态；补货不能自动解除暂停。
+- id: RestockPlan.quantity
+  owner_ref: RestockPlan
+  source_field: quantity
+  value_kind: integer
+  unit: units
+  description: 建议新增的库存数量，不是补货后的库存总量。
+- id: RestockPlan.status
+  owner_ref: RestockPlan
+  source_field: status
+  value_kind: string
+  unit: null
+  description: 方案状态valid/stale/superseded/consumed，与变更状态不同。
+- id: RestockPlan.target_days
+  owner_ref: RestockPlan
+  source_field: target_days
+  value_kind: integer
+  unit: days
+  description: 用户明确指定或可信业务配置提供的目标覆盖天数。
+- id: StagedChange.status
+  owner_ref: StagedChange
+  source_field: status
+  value_kind: string
+  unit: null
+  description: 变更状态staged/applied/discarded；不包含approved枚举。
+- id: StagedChange.items
+  owner_ref: StagedChange
+  source_field: items
+  value_kind: array
+  unit: null
+  description: 各目标字段的before/after差异；这些计划差异不是执行回执。
+- id: ApprovalRecord.payload_digest
+  owner_ref: ApprovalRecord
+  source_field: payload_digest
+  value_kind: string
+  unit: null
+  description: 宿主授权绑定的具体变更内容摘要，不是模型可声明的批准。
+- id: Observation.value_status
+  owner_ref: Observation
+  source_field: value_status
+  value_kind: string
+  unit: null
+  description: 事实状态known/unknown/stale/invalid/conflicting；未知不等于零。
+- id: Observation.coverage
+  owner_ref: Observation
+  source_field: coverage
+  value_kind: object
+  unit: null
+  description: 读取范围、完整性和截断情况；不完整查询不能证明某事不存在。
+- id: Observation.source_updated_at
+  owner_ref: Observation
+  source_field: source_updated_at
+  value_kind: datetime
+  unit: null
+  description: 可选源数据更新时间；不能用读取时间observed_at伪造。

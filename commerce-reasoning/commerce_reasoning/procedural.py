@@ -251,7 +251,10 @@ class SubgraphRetriever:
 
 
 def load_knowledge(root: Path, config: Any) -> tuple[OntologyRegistry, ProcedureGraph]:
+    config = config.validate_effective()
     ontology = OntologyRegistry(root / config.ontology_path)
+    if config.effective_semantic_mode == "closure":
+        ontology.validate_semantic_refs(root / config.semantic_schema_path)
     predicates = yaml.safe_load((root / config.predicates_path).read_text())
     if {p["id"] for p in predicates["predicates"]} != PREDICATES:
         raise ValueError("Predicate registry does not match its implementations")

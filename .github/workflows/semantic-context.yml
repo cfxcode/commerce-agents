@@ -1,0 +1,57 @@
+name: semantic-context
+
+on:
+  pull_request:
+    paths:
+      - 'commerce-reasoning/**'
+      - 'knowledge/**'
+      - 'configs/**'
+      - 'docs/ontology-pg/**'
+      - '.github/workflows/semantic-context.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Record reproducible source identity
+        run: |
+          mkdir -p semantic-evidence
+          git rev-parse HEAD > semantic-evidence/commit.txt
+          git archive --format=tar.gz HEAD > semantic-evidence/source.tar.gz
+          sha256sum semantic-evidence/source.tar.gz > semantic-evidence/SHA256SUMS
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Install repository dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Run offline reasoning regressions
+        run: |
+          set -o pipefail
+          python -m pytest -q commerce-reasoning/tests --junitxml=semantic-evidence/tests.xml | tee semantic-evidence/tests.txt
+      - name: Validate working and published knowledge
+        run: |
+          python -m commerce_reasoning.cli validate-knowledge --config configs/reasoning.yaml --knowledge-source working > semantic-evidence/knowledge-working.json
+          python -m commerce_reasoning.cli validate-knowledge --config configs/reasoning.yaml --knowledge-source published > semantic-evidence/knowledge-published.json
+      - name: Preflight all local semantic contexts
+        run: python -m commerce_reasoning.cli preflight-semantics --config configs/experiments/p-closure.yaml --knowledge-source working --out semantic-evidence/preflight.json
+      - name: Audit full guide inputs against independent expected definitions
+        run: python -m commerce_reasoning.cli preflight-guidance --config configs/experiments/p-closure.yaml --knowledge-source working --out semantic-evidence/full-guidance.json
+      - name: Bind offline semantic and execution evidence
+        run: |
+          python -m commerce_reasoning.cli verify-semantics --config configs/experiments/p-closure.yaml --knowledge-source working --out runtime/semantic-verification/report.json
+          cp runtime/semantic-verification/report.json semantic-evidence/verification.json
+      - name: Preserve source and test evidence without runtime databases
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: semantic-evidence-${{ github.sha }}
+          path: semantic-evidence/
+          retention-days: 7
+          if-no-files-found: error

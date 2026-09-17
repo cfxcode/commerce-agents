@@ -244,6 +244,10 @@ def publish(
     validation_path: Path,
     initial: bool = False,
 ) -> dict:
+    if config.effective_semantic_mode == "closure":
+        raise ValueError(
+            "Semantic extensions require publish-semantic; --initial cannot enable closure"
+        )
     validation = json.loads(validation_path.read_text())
     if not approved_by.strip():
         raise ValueError("A release requires an explicit reviewer identity")

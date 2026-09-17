@@ -1,0 +1,93 @@
+name: semantic-live-evaluation
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Explicit model spending: check only, smoke, or smoke plus held-out validation'
+        type: choice
+        options: [check, smoke, validation]
+        default: check
+      max_calls:
+        description: 'Hard call cap (1-500)'
+        default: '120'
+      max_tokens:
+        description: 'Returned-token stop threshold (1-2000000; one in-flight call may cross it)'
+        default: '400000'
+  pull_request:
+    paths:
+      - '.github/workflows/semantic-live-evaluation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  prerequisites:
+    if: github.repository == 'cfxcode/commerce-agents' && (github.event_name == 'workflow_dispatch' || (github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/semantic-context-closure'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - name: Check configured model access (no requests, no secret values)
+        id: check
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL || vars.ANTHROPIC_BASE_URL }}
+          COMMERCE_MODEL: ${{ vars.COMMERCE_MODEL || secrets.COMMERCE_MODEL }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          missing = [name for name in ('ANTHROPIC_API_KEY', 'COMMERCE_MODEL') if not os.environ.get(name)]
+          model = os.environ.get('COMMERCE_MODEL', '')
+          if model and not model.startswith('claude-') and not os.environ.get('ANTHROPIC_BASE_URL'):
+              missing.append('ANTHROPIC_BASE_URL')
+          status = 'BLOCKED: missing ' + ', '.join(missing) if missing else 'READY: prerequisite presence only; endpoint validity and access are checked by the bounded runner.'
+          print(status)
+          with Path(os.environ['GITHUB_OUTPUT']).open('a') as stream:
+              stream.write('ready=' + str(not missing).lower() + '\n')
+          with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a') as stream:
+              stream.write('## Live model evaluation prerequisites\n\n' + status + '\n\nNo model requests occur in this job. A successful prerequisite check is not a successful evaluation.\n')
+          PY
+  live:
+    needs: prerequisites
+    if: github.event_name == 'workflow_dispatch' && inputs.mode != 'check' && needs.prerequisites.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Install pinned dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Offline semantic and execution preconditions
+        run: |
+          python -m commerce_reasoning.cli verify-semantics --config configs/experiments/p-closure.yaml --knowledge-source working --out runtime/live-preconditions/report.json
+          python -m commerce_reasoning.cli preflight-guidance --config configs/experiments/p-closure.yaml --knowledge-source working --out runtime/live-preconditions/full-guidance.json
+      - name: Explicit bounded model comparison (no publication or activation)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL || vars.ANTHROPIC_BASE_URL }}
+          COMMERCE_MODEL: ${{ vars.COMMERCE_MODEL || secrets.COMMERCE_MODEL }}
+          MODE: ${{ inputs.mode }}
+          MAX_CALLS: ${{ inputs.max_calls }}
+          MAX_TOKENS: ${{ inputs.max_tokens }}
+        run: |
+          flag=""
+          if [ "$MODE" = "validation" ]; then flag="--validation"; fi
+          python -m commerce_reasoning.live_acceptance --max-calls "$MAX_CALLS" --max-tokens "$MAX_TOKENS" $flag
+      - name: Preserve aggregate evidence only (exclude raw prompts, SQLite and credentials)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: semantic-live-${{ github.sha }}-${{ github.run_id }}
+          path: |
+            runtime/live-semantic-acceptance/status.json
+            runtime/live-preconditions/report.json
+            runtime/live-preconditions/full-guidance.json
+          retention-days: 7
+          if-no-files-found: warn

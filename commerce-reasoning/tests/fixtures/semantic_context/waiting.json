@@ -1,0 +1,24 @@
+{
+  "task": {
+    "merchant_id": "fixture",
+    "operator": "fixture",
+    "session_hash": "fixture",
+    "environment_id": "fixture",
+    "target": "fixture-item",
+    "target_days": 30,
+    "phase": "WAIT_APPROVAL",
+    "created_at": "2026-09-16T00:00:00Z",
+    "updated_at": "2026-09-16T00:00:00Z"
+  },
+  "view": {
+    "listing": {
+      "kind": "SellableItem"
+    },
+    "observations": {},
+    "pending": null,
+    "pending_present": null
+  },
+  "plan": null,
+  "last": {},
+  "alerts": {}
+}

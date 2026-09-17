@@ -23,6 +23,15 @@ class ReasoningConfig(BaseModel):
     guidance_timeout_s: float = Field(default=8, gt=0)
     guidance_max_tokens: int = Field(default=500, ge=100)
     context_budget_tokens: int = Field(default=2000, ge=100)
+    # Legacy preserves the original token-named byte multipliers. Closure uses
+    # explicit byte limits; none of these fields changes tool authorization.
+    semantic_context_mode: Literal["legacy", "closure"] = "legacy"
+    semantic_schema_path: str = "knowledge/ontology/ontology.semantic.schema.json"
+    semantic_budget_bytes: int = Field(default=8000, ge=1, le=1_000_000)
+    guidance_input_budget_bytes: int = Field(default=16000, ge=1, le=2_000_000)
+    pg_budget_bytes: int = Field(default=4000, ge=1, le=1_000_000)
+    semantic_max_definitions: int = Field(default=64, ge=1, le=10_000)
+    semantic_max_dependency_depth: int = Field(default=12, ge=1, le=64)
     hops: int = Field(default=2, ge=0, le=2)
     recent_events: int = Field(default=3, ge=1, le=10)
     max_recovery_reads: int = Field(default=1, ge=0, le=3)
@@ -30,6 +39,26 @@ class ReasoningConfig(BaseModel):
     plan_ttl_s: int = Field(default=300, gt=0)
     evolution_enabled: bool = False
     debug_enabled: bool = True
+
+    @property
+    def effective_variant(self) -> str:
+        return self.variant if self.enabled else "C0"
+
+    @property
+    def effective_semantic_mode(self) -> str:
+        return self.semantic_context_mode if self.enabled else "legacy"
+
+    def validate_effective(self) -> "ReasoningConfig":
+        # model_copy(update=...) bypasses Pydantic validation. Validate only after
+        # CLI/environment/evaluation overrides, including enabled, have settled.
+        checked = ReasoningConfig.model_validate(self.model_dump())
+        if checked.effective_semantic_mode == "closure" and checked.effective_variant not in {
+            "T",
+            "P",
+            "E",
+        }:
+            raise ValueError("closure requires an enabled T/P/E variant")
+        return checked
 
     @classmethod
     def from_file(cls, path: Path) -> "ReasoningConfig":

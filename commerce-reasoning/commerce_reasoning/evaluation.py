@@ -24,6 +24,8 @@ from merchant_agent import (
 from .config import ReasoningConfig
 from .execution import MerchantExecutionService
 from .models import digest, uid
+from .semantic_audit import load_oracle
+from .semantic_evaluation import comparison_fields, semantic_metrics, semantic_totals
 from .storage import Store
 
 
@@ -266,7 +268,7 @@ async def host_script(env: Environment):
         await env.approve(change.change_id, discard=env.case["host_action"] == "discard")
 
 
-def metrics(events: list[dict]) -> dict:
+def metrics(events: list[dict], *, semantic_oracle: dict | None = None) -> dict:
     usage = {
         role: {
             key: 0
@@ -306,6 +308,7 @@ def metrics(events: list[dict]) -> dict:
         "applied": sum(e["event_type"] == "action_applied" for e in events),
         "degradations": sum(e["event_type"] == "guidance_failed" for e in events),
         "off_graph": sum(e["event_type"] == "off_graph_action" for e in events),
+        "semantic": semantic_metrics(events, oracle=semantic_oracle),
     }
 
 
@@ -344,6 +347,7 @@ async def evaluate(
     directory = out / run_id
     directory.mkdir(parents=True)
     results = []
+    semantic_oracle = load_oracle(root)
     for case, trial in [(case, trial) for case in cases for trial in range(1, repetitions + 1)]:
         artifact_name = case["case_id"] if repetitions == 1 else f"{case['case_id']}.trial-{trial}"
         started = time.monotonic()
@@ -388,7 +392,7 @@ async def evaluate(
             "infrastructure_error": failure,
             "task_error": task_error,
             "oracle": oracle(env),
-            "metrics": metrics(events),
+            "metrics": metrics(events, semantic_oracle=semantic_oracle),
             "duration_ms": round((time.monotonic() - started) * 1000),
             "knowledge_hash": env.service.knowledge_hash,
         }
@@ -408,7 +412,8 @@ async def evaluate(
     report = {
         "run_id": run_id,
         "variant": variant,
-        "model": model or os.environ.get("COMMERCE_MODEL"),
+        "model": env.config.model,
+        **comparison_fields(root, env.service, env.config),
         "manifest_hash": digest(spec),
         "role": spec.get("role", "public_regression"),
         "repetitions": repetitions,
@@ -449,22 +454,36 @@ async def evaluate(
             for usage in r["metrics"]["usage"].values()
         ),
         "unmetered_calls": sum(r["metrics"]["unmetered_calls"] for r in results),
+        "semantic_summary": {
+            "builds": sum(r["metrics"]["semantic"]["builds"] for r in results),
+            "failures": sum(r["metrics"]["semantic"]["failures"] for r in results),
+            "build_duration_ms": sum(
+                r["metrics"]["semantic"]["build_duration_ms"] for r in results
+            ),
+            "max_semantic_bytes": max(
+                (r["metrics"]["semantic"]["max_semantic_bytes"] for r in results), default=0
+            ),
+        },
         "submitted": len(results),
         "valid": len(valid),
         "successes": successes,
         "success_rate": successes / len(valid) if valid else None,
+        "success_rate_all_submissions": successes / len(results) if results else None,
+        "success_rate_valid": successes / len(valid) if valid else None,
         "completion_rate": len(valid) / len(results) if results else 0,
         "wilson_95": wilson(successes, len(valid)),
+        "wilson_95_all_submissions": wilson(successes, len(results)),
         "results": results,
+        "semantic_metrics": semantic_totals([row["metrics"]["semantic"] for row in results]),
         "limitations": [
-            "One trial per scenario; no claim of statistical improvement.",
+            f"{repetitions} trial(s) per scenario; no claim of statistical improvement.",
             "Single-process simulation, not a purchase order.",
             "No monetary estimate without a supplied price schedule.",
         ],
     }
     (directory / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
     (directory / "report.md").write_text(
-        f"# {variant} pilot\n\nRun `{run_id}`; model `{report['model']}`.\n\n{successes}/{len(valid)} valid tasks passed; {len(results) - len(valid)} infrastructure failures.\n\n| Case | Passed | Phase | Duration ms |\n|---|---|---|---|\n"
+        f"# {variant} pilot\n\nRun `{run_id}`; model `{report['model']}`.\n\n{successes}/{len(valid)} valid tasks passed; {successes}/{len(results)} of all submissions; {len(results) - len(valid)} infrastructure failures.\n\n| Case | Passed | Phase | Duration ms |\n|---|---|---|---|\n"
         + "\n".join(
             f"| {r['case_id']} | {r['oracle']['passed']} | {r['oracle']['phase']} | {r['duration_ms']} |"
             for r in results

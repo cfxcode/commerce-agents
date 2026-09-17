@@ -22,7 +22,7 @@ paths each, four vertical examples, and a Claude Code plugin.
 `requirements.txt` installs the eight packages and their pinned dependencies (`requirements-dev.txt`
 adds pytest and ruff); `scripts/install.sh` runs it.
 
-- `commerce-reasoning/`: retail observations, controlled execution, procedural graphs, evaluation, and offline candidate releases.
+- `commerce-reasoning/`: retail observations, controlled execution, procedural graphs, evaluation, and offline candidate releases. Its `semantic_models.py`, `semantic_registry.py`, and `semantic_context.py` define and retrieve bounded, definition-only ontology dependencies without model calls or business writes.
 - `knowledge/`, `configs/`, `evals/commerce_reasoning/`: versioned definitions, switches, and frozen regression tasks.
 - `examples/retail/api/reasoning_backend.py`: single-process atomic simulation with revisions and receipts.
 - `docs/ontology-pg/`: setup, interface contracts, validation and measured results.
@@ -59,3 +59,12 @@ redesign rather than rename.
 ruff check . && ruff format --check . && pytest && python scripts/check.py
 python scripts/verify_all.py          # adds deploy dry runs and web builds
 ```
+
+Semantic context work: `semantic_runtime.py` integrates definitions only in opt-in T/P/E closure. Keep C0/O and the six-field legacy action projection stable. Use `semantic_release.py` / `semantic_cli.py` for explicit working/published inspection; never change active or run paid comparisons without authorization. `semantic_evaluation.py` fixes all comparison factors except semantic mode. New context code must not create approval, provenance, tools, or business facts.
+
+Semantic acceptance: `semantic_audit.py` owns independent coverage checks;
+`semantic_preflight.py` checks complete guide inputs. Browser fixture scripts bind
+only loopback and use scripted models with real mock-backend guards. They are not
+production entry points. Live evaluation requires explicit model configuration and
+has separate call/token/wall budgets; missing prerequisites must not be reported as
+passed evaluation or used to publish a release.

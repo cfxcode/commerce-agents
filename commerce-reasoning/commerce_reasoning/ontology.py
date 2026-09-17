@@ -6,8 +6,6 @@ from math import ceil
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from .models import (
     Blocked,
     Coverage,
@@ -19,6 +17,7 @@ from .models import (
     digest,
     uid,
 )
+from .semantic_registry import SemanticRegistry, load_unique_yaml
 from .storage import Store
 
 CHECKS = frozenset(
@@ -45,7 +44,7 @@ CHECKS = frozenset(
 
 class OntologyRegistry:
     def __init__(self, path: Path):
-        self.definition = yaml.safe_load(path.read_text())
+        self.definition = load_unique_yaml(path)
         self.entities = self._index("entities")
         self.actions = self._index("actions")
         self.states = self._index("states")
@@ -63,6 +62,44 @@ class OntologyRegistry:
             if not set(action["checks"]) <= CHECKS:
                 raise ValueError("Unknown action check")
         self.content_hash = digest(self.definition)
+        # Old published knowledge remains valid on the legacy path. Extended definitions
+        # are validated eagerly, before any runtime request can consume them.
+        self.semantic_registry = (
+            SemanticRegistry(self.definition)
+            if "semantic_schema_version" in self.definition
+            else None
+        )
+        self.properties = {item["id"]: item for item in self.definition.get("properties", [])}
+
+    def validate_semantic_refs(self, schema_path: Path | None = None) -> SemanticRegistry:
+        from .semantic_models import SemanticError
+
+        if self.semantic_registry is None:
+            raise SemanticError("SEMANTIC_SCHEMA_INVALID", "semantic_schema_version")
+        if schema_path is not None:
+            self.semantic_registry.validate_schema_file(schema_path)
+        return self.semantic_registry
+
+    def get_action(self, identifier: str) -> dict:
+        return self.validate_semantic_refs().get_action(identifier)
+
+    def get_state(self, identifier: str) -> dict:
+        return self.validate_semantic_refs().get_state(identifier)
+
+    def get_entity(self, identifier: str) -> dict:
+        return self.validate_semantic_refs().get_entity(identifier)
+
+    def get_relation(self, identifier: str) -> dict:
+        return self.validate_semantic_refs().get_relation(identifier)
+
+    def get_property(self, identifier: str) -> dict:
+        return self.validate_semantic_refs().get_property(identifier)
+
+    def get_check(self, identifier: str) -> dict:
+        return self.validate_semantic_refs().get_check(identifier)
+
+    def ancestors(self, identifier: str) -> tuple[str, ...]:
+        return self.validate_semantic_refs().ancestors(identifier)
 
     def _index(self, field: str) -> dict:
         items = self.definition[field]
