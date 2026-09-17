@@ -81,8 +81,10 @@ def run_case(browser, root_url, out, *, locale, width, action, degraded):
         page.goto(root_url, wait_until="domcontentloaded")
         visible_button(page, "中文" if locale == "zh-CN" else "EN").click()
         if width < 1024:
-            # Mobile portal's assistant toggle has its own translated accessible name.
-            visible_button(page, "显示助手" if locale == "zh-CN" else "Show assistant").click()
+            # The mobile header uses the visible Assistant label; desktop has Show/Hide aria labels.
+            page.locator("header").get_by_role(
+                "button", name="助手" if locale == "zh-CN" else "Assistant", exact=True
+            ).click()
         box = page.get_by_role(
             "textbox",
             name="向商家助手发送消息" if locale == "zh-CN" else "Message the merchant assistant",

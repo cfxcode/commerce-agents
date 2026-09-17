@@ -36,7 +36,10 @@ type Props = {
 
 export default function SemanticContextPanel({ locale, snapshot, mode, source, events }: Props) {
   const zh = locale === "zh-CN";
-  const failed = events.filter((event) => event.event_type === "semantic_context_failed").at(-1);
+  const latestContextEvent = events.filter((event) =>
+    event.event_type === "semantic_context_built" || event.event_type === "semantic_context_failed"
+  ).at(-1);
+  const failed = latestContextEvent?.event_type === "semantic_context_failed" ? latestContextEvent : null;
   const kinds = ["actions", "states", "entities", "relations", "properties", "checks"] as const;
   const labels = zh
     ? { actions: "动作", states: "状态", entities: "对象类型", relations: "关系", properties: "属性", checks: "检查说明" }
@@ -50,11 +53,15 @@ export default function SemanticContextPanel({ locale, snapshot, mode, source, e
         {source ? ` · ${source}` : ""}
       </p>
       <p className="text-xs text-(--ink-soft)">{zh ? "只读定义与依赖解释；不是业务事实或审批凭证。" : "Read-only definitions and dependencies, not business facts or approval."}</p>
+      {failed ? <p className="text-sm text-(--danger)" role="status" data-testid="semantic-context-failure">
+        {zh ? "最近一次语义构造未完成：" : "The latest semantic construction failed: "}
+        {failed.error_code ?? "SEMANTIC_CONTEXT_FAILED"}
+        {snapshot ? (zh ? "；下方仅保留历史定义。" : "; only historical definitions are retained below.") : ""}
+      </p> : null}
       {!snapshot ? <p className="text-sm" role="status">
         {mode?.effective === "closure"
           ? (zh ? "本轮没有可用的语义上下文。" : "No semantic context is available for this round.")
           : (zh ? "当前使用 legacy 路径，不展开完整定义依赖。" : "The legacy path does not expand complete definition dependencies.")}
-        {failed ? ` ${failed.error_code ?? "SEMANTIC_CONTEXT_FAILED"}` : ""}
       </p> : <>
         <p role="status" data-testid="semantic-snapshot-state" className="text-sm font-medium">
           {snapshot.is_current
