@@ -57,3 +57,81 @@ def input_bytes(data: dict, *, canonical: bool) -> int:
     import json
 
     return len(json.dumps(data, ensure_ascii=False).encode("utf-8"))
+
+
+def task_payload(task: Any, view: dict, plan: dict | None, variant: str) -> dict:
+    """The runtime and offline preflight share this exact facts projection."""
+    payload: dict[str, Any] = {
+        "task": {
+            "target": task.target,
+            "target_days": task.target_days,
+            "unknowns": list(task.unknowns),
+            "phase": task.phase,
+        }
+    }
+    if variant != "C0":
+        payload["semantic_context"] = {
+            "target_kind": view["listing"]["kind"] if view.get("listing") else "unknown",
+            "facts": {
+                key: {field: value[field] for field in ("value", "value_status", "observation_id")}
+                for key, value in view["observations"].items()
+            },
+            "pending_present": view["pending_present"],
+            "plan": plan,
+        }
+    return payload
+
+
+def guidance_input(
+    *,
+    payload: dict,
+    semantic: SemanticInput,
+    subgraph: dict,
+    view: dict,
+    enabled_actions: list[str],
+    events: list[dict],
+    language: str,
+    config: Any,
+) -> dict:
+    """Build the actual guide input, without invoking any model or modifying facts."""
+    data = {
+        **payload,
+        "response_language": language,
+        "enabled_actions": enabled_actions,
+        **semantic.fields,
+        "evidence_ids": [o["observation_id"] for o in view["observations"].values()],
+        "edge_ids": [edge["id"] for edge in subgraph["edges"]],
+        "recent_events": [
+            {key: event.get(key) for key in ("event_type", "action_ref", "status", "error_code")}
+            for event in events[-config.recent_events :]
+        ],
+    }
+    if config.effective_variant == "T":
+        data["steps"] = [
+            {
+                "id": edge["id"],
+                **{
+                    key: edge[key]
+                    for key in ("condition", "guidance", "pitfalls", "predicate_status")
+                },
+            }
+            for edge in subgraph["edges"]
+        ]
+    else:
+        data["subgraph"] = subgraph
+    return data
+
+
+def guidance_budget(data: dict, config: Any) -> dict:
+    """Measure the exact json.dumps serialization used by model_json, not tokens."""
+    size = input_bytes(data, canonical=False)
+    limit = (
+        config.guidance_input_budget_bytes
+        if config.effective_semantic_mode == "closure"
+        else config.context_budget_tokens * 3
+    )
+    return {
+        "guidance_input_bytes": size,
+        "guidance_input_limit_bytes": limit,
+        "within_budget": size <= limit,
+    }

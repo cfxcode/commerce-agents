@@ -13,6 +13,7 @@ from commerce_reasoning.config import ReasoningConfig
 from commerce_reasoning.execution import SOLVER_NOTICE, MerchantExecutionService
 from commerce_reasoning.guidance import GUIDANCE_SYSTEM
 from commerce_reasoning.procedural import load_knowledge
+from commerce_reasoning.semantic_audit import ORACLE_PATH
 from commerce_reasoning.semantic_evaluation import comparison_fields
 from commerce_reasoning.semantic_models import SemanticError
 from commerce_reasoning.semantic_release import (
@@ -37,7 +38,7 @@ def working(tmp_path):
     shutil.copytree(ROOT / "knowledge", tmp_path / "knowledge")
     for directory in SOURCE_ROOTS:
         shutil.copytree(ROOT / directory, tmp_path / directory)
-    for name in (*INTEGRATION_SOURCES, "requirements.txt", "requirements-dev.txt"):
+    for name in (*INTEGRATION_SOURCES, "requirements.txt", "requirements-dev.txt", ORACLE_PATH):
         destination = tmp_path / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / name, destination)

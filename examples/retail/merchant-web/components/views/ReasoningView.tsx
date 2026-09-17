@@ -101,6 +101,9 @@ export default function ReasoningView({ refreshKey, sessionId }: { refreshKey: n
   const [reload, setReload] = useState(0);
   const [expanded, setExpanded] = useState<string | null>(null);
   useEffect(() => {
+    setTasks(null); setTaskId(null); setDetail(null); setSelected(null); setExpanded(null);
+  }, [sessionId]);
+  useEffect(() => {
     let cancelled = false, timer: ReturnType<typeof setTimeout>;
     async function read() {
       if (document.visibilityState !== "visible") { timer = setTimeout(read, 2000); return; }

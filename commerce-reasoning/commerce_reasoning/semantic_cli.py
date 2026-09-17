@@ -10,14 +10,17 @@ from pathlib import Path
 
 from .guidance import GUIDANCE_SYSTEM
 from .models import TaskRecord, uid
+from .semantic_audit import load_oracle
 from .semantic_context import SemanticContextBuilder
 from .semantic_evaluation import compare_semantic_reports
 from .semantic_models import BUILDER_VERSION, SemanticDefinitionLimits, SemanticError, content_hash
+from .semantic_preflight import full_payload_preflight
 from .semantic_release import load_effective_prompts, publish_semantic, semantic_identity
 
 COMMANDS = {
     "inspect-semantics",
     "preflight-semantics",
+    "preflight-guidance",
     "verify-semantics",
     "compare-semantics",
     "publish-semantic",
@@ -144,6 +147,7 @@ def run(args, root, config, registry, graph, release):
     if args.command in {
         "inspect-semantics",
         "preflight-semantics",
+        "preflight-guidance",
         "verify-semantics",
         "publish-semantic",
     }:
@@ -152,6 +156,8 @@ def run(args, root, config, registry, graph, release):
         report = inspect(root, config, registry, graph, root / args.fixture, args.node, args.hops)
     elif args.command == "preflight-semantics":
         report = preflight(config, registry, graph)
+    elif args.command == "preflight-guidance":
+        report = full_payload_preflight(config, registry, graph, load_oracle(root))
     elif args.command == "verify-semantics":
         identity = semantic_identity(root, graph, config, guidance=guidance, solver=solver)
         # Effective candidate paths are explicit; no fallback to the active deployment.

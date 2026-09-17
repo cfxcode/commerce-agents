@@ -24,7 +24,8 @@ from merchant_agent import (
 from .config import ReasoningConfig
 from .execution import MerchantExecutionService
 from .models import digest, uid
-from .semantic_evaluation import comparison_fields, semantic_metrics
+from .semantic_audit import load_oracle
+from .semantic_evaluation import comparison_fields, semantic_metrics, semantic_totals
 from .storage import Store
 
 
@@ -267,7 +268,7 @@ async def host_script(env: Environment):
         await env.approve(change.change_id, discard=env.case["host_action"] == "discard")
 
 
-def metrics(events: list[dict]) -> dict:
+def metrics(events: list[dict], *, semantic_oracle: dict | None = None) -> dict:
     usage = {
         role: {
             key: 0
@@ -307,7 +308,7 @@ def metrics(events: list[dict]) -> dict:
         "applied": sum(e["event_type"] == "action_applied" for e in events),
         "degradations": sum(e["event_type"] == "guidance_failed" for e in events),
         "off_graph": sum(e["event_type"] == "off_graph_action" for e in events),
-        "semantic": semantic_metrics(events),
+        "semantic": semantic_metrics(events, oracle=semantic_oracle),
     }
 
 
@@ -346,6 +347,7 @@ async def evaluate(
     directory = out / run_id
     directory.mkdir(parents=True)
     results = []
+    semantic_oracle = load_oracle(root)
     for case, trial in [(case, trial) for case in cases for trial in range(1, repetitions + 1)]:
         artifact_name = case["case_id"] if repetitions == 1 else f"{case['case_id']}.trial-{trial}"
         started = time.monotonic()
@@ -390,7 +392,7 @@ async def evaluate(
             "infrastructure_error": failure,
             "task_error": task_error,
             "oracle": oracle(env),
-            "metrics": metrics(events),
+            "metrics": metrics(events, semantic_oracle=semantic_oracle),
             "duration_ms": round((time.monotonic() - started) * 1000),
             "knowledge_hash": env.service.knowledge_hash,
         }
@@ -472,6 +474,7 @@ async def evaluate(
         "wilson_95": wilson(successes, len(valid)),
         "wilson_95_all_submissions": wilson(successes, len(results)),
         "results": results,
+        "semantic_metrics": semantic_totals([row["metrics"]["semantic"] for row in results]),
         "limitations": [
             f"{repetitions} trial(s) per scenario; no claim of statistical improvement.",
             "Single-process simulation, not a purchase order.",

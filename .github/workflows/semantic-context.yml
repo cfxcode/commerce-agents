@@ -41,6 +41,8 @@ jobs:
           python -m commerce_reasoning.cli validate-knowledge --config configs/reasoning.yaml --knowledge-source published > semantic-evidence/knowledge-published.json
       - name: Preflight all local semantic contexts
         run: python -m commerce_reasoning.cli preflight-semantics --config configs/experiments/p-closure.yaml --knowledge-source working --out semantic-evidence/preflight.json
+      - name: Audit full guide inputs against independent expected definitions
+        run: python -m commerce_reasoning.cli preflight-guidance --config configs/experiments/p-closure.yaml --knowledge-source working --out semantic-evidence/full-guidance.json
       - name: Bind offline semantic and execution evidence
         run: |
           python -m commerce_reasoning.cli verify-semantics --config configs/experiments/p-closure.yaml --knowledge-source working --out runtime/semantic-verification/report.json

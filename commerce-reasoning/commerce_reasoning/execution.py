@@ -37,7 +37,13 @@ from .semantic_release import (
     resolve_knowledge,
     validate_loaded_knowledge,
 )
-from .semantic_runtime import compose_semantics, input_bytes
+from .semantic_runtime import (
+    compose_semantics,
+    guidance_budget,
+    guidance_input,
+    input_bytes,
+    task_payload,
+)
 from .storage import Store
 
 ACTION_MAP = {
@@ -355,26 +361,8 @@ class MerchantExecutionService:
         self.store.delete("semantic_context", task.merchant_id, task.task_id)
         view = self.adapter.view(task, self.clock())
         plan = self.current_plan(task)
-        # Minimal task input is common to every experimental group.
-        payload: dict = {
-            "task": {
-                "target": task.target,
-                "target_days": task.target_days,
-                "unknowns": task.unknowns,
-                "phase": task.phase,
-            }
-        }
-        variant = self.config.variant if self.config.enabled else "C0"
-        if variant != "C0":
-            payload["semantic_context"] = {
-                "target_kind": view["listing"]["kind"] if view["listing"] else "unknown",
-                "facts": {
-                    key: {f: value[f] for f in ("value", "value_status", "observation_id")}
-                    for key, value in view["observations"].items()
-                },
-                "pending_present": view["pending_present"],
-                "plan": plan.model_dump(mode="json") if plan else None,
-            }
+        variant = self.config.effective_variant
+        payload = task_payload(task, view, plan.model_dump(mode="json") if plan else None, variant)
         if variant in {"T", "P", "E"}:
             events = self.store.events(task.merchant_id, task.task_id, limit=1000, latest=True)
             business = [
@@ -395,6 +383,16 @@ class MerchantExecutionService:
             guidance_started = time.monotonic()
             data = None
             model_requested = False
+            context_attempt_id = uid("context")
+            self.event(
+                task,
+                "semantic_context_attempted",
+                role="semantic",
+                context_attempt_id=context_attempt_id,
+                semantic_context_mode=self.config.effective_semantic_mode,
+                model_requested=False,
+            )
+
             try:
                 subgraph = SubgraphRetriever().retrieve(
                     self.graph,
@@ -430,6 +428,8 @@ class MerchantExecutionService:
                         task.task_id,
                         {
                             "turn_id": task.turn_id,
+                            "task_revision": task.revision,
+                            "phase": task.phase,
                             "public": bundle.public,
                             "diagnostics": bundle.diagnostics,
                             "content_hash": bundle.content_hash,
@@ -444,53 +444,60 @@ class MerchantExecutionService:
                         task,
                         "semantic_context_built",
                         role="semantic",
+                        context_attempt_id=context_attempt_id,
+                        included_definition_refs=[
+                            f"{kind}:{item['id']}"
+                            for kind in (
+                                "actions",
+                                "states",
+                                "entities",
+                                "relations",
+                                "properties",
+                                "checks",
+                            )
+                            for item in bundle.public[kind]
+                        ],
                         **summary,
                         content_hash=bundle.content_hash,
                         duration_ms=round((time.monotonic() - semantic_started) * 1000),
                         model_requested=False,
                         cache_hit=False,
                     )
-                data = {
-                    **payload,
-                    "response_language": session.response_language,
-                    "enabled_actions": enabled,
-                    **semantic.fields,
-                    "evidence_ids": [o["observation_id"] for o in view["observations"].values()],
-                    "edge_ids": [e["id"] for e in subgraph["edges"]],
-                    "recent_events": [
-                        {k: e.get(k) for k in ("event_type", "action_ref", "status", "error_code")}
-                        for e in business[-self.config.recent_events :]
-                    ],
-                }
-                if variant == "T":
-                    data["steps"] = [
-                        {
-                            "id": e["id"],
-                            **{
-                                k: e[k]
-                                for k in ("condition", "guidance", "pitfalls", "predicate_status")
-                            },
-                        }
-                        for e in subgraph["edges"]
-                    ]
-                else:
-                    data["subgraph"] = subgraph
-                # Raw UI text, descriptions and reviews never enter this payload.
-                payload_size = input_bytes(
-                    data, canonical=self.config.effective_semantic_mode == "closure"
+                data = guidance_input(
+                    payload=payload,
+                    semantic=semantic,
+                    subgraph=subgraph,
+                    view=view,
+                    enabled_actions=enabled,
+                    events=business,
+                    language=session.response_language,
+                    config=self.config,
                 )
-                payload_limit = (
-                    self.config.guidance_input_budget_bytes
-                    if self.config.effective_semantic_mode == "closure"
-                    else self.config.context_budget_tokens * 3
+                measured = guidance_budget(data, self.config)
+                payload_size = measured["guidance_input_bytes"]
+                self.event(
+                    task,
+                    "guidance_input_measured",
+                    role="semantic",
+                    context_attempt_id=context_attempt_id,
+                    model_requested=False,
+                    semantic_context_mode=self.config.effective_semantic_mode,
+                    **measured,
                 )
-                if payload_size > payload_limit:
+                if not measured["within_budget"]:
                     raise SemanticError("SEMANTIC_BUDGET_EXCEEDED", "guidance_input_budget_bytes")
                 model_requested = True
                 guidance, usage = await self.guidance.build(
                     client, self.config.guidance_model or agent_config.model, data, self.config
                 )
                 payload["procedural_guidance"] = guidance.model_dump(mode="json")
+                current_semantics = self.store.get(
+                    "semantic_context", task.merchant_id, task.task_id
+                )
+                if current_semantics:
+                    self.store.put(
+                        "semantic_history", task.merchant_id, task.task_id, current_semantics
+                    )
                 self.store.put(
                     "guidance",
                     task.merchant_id,
@@ -505,6 +512,7 @@ class MerchantExecutionService:
                     task,
                     "guidance_generated",
                     role="guidance",
+                    context_attempt_id=context_attempt_id,
                     **usage,
                     model_requested=True,
                     guidance_input_bytes=payload_size,
@@ -542,6 +550,7 @@ class MerchantExecutionService:
                 event = self.event(
                     task,
                     "guidance_failed" if model_requested else "semantic_context_failed",
+                    context_attempt_id=context_attempt_id,
                     status="degraded",
                     error_code=code,
                     role="guidance" if model_requested else "semantic",
@@ -639,6 +648,13 @@ class MerchantExecutionService:
     def record_request(self, session, request):
         task = self.task(session)
         if task:
+            self.event(
+                task,
+                "solver_request_measured",
+                role="semantic",
+                model_requested=False,
+                request_bytes=input_bytes(request, canonical=False),
+            )
             # Private SQLite is mode 0600. Thought bodies are excluded even there.
             safe = copy.deepcopy(request)
             for message in safe.get("messages", []):
@@ -670,12 +686,25 @@ class MerchantExecutionService:
             raise LookupError(task_id)
         task = TaskRecord.model_validate(raw)
         advice = self.store.get("guidance", task.merchant_id, task_id)
+        current_semantics = self.store.get("semantic_context", task.merchant_id, task_id)
+        semantics = current_semantics or self.store.get(
+            "semantic_history", task.merchant_id, task_id
+        )
+        if semantics:
+            semantics = copy.deepcopy(semantics)
+            semantics["is_current"] = bool(
+                current_semantics
+                and semantics.get("turn_id") == task.turn_id
+                and semantics.get("phase") == task.phase
+                and semantics.get("task_revision") == task.revision
+                and self.config.effective_semantic_mode == "closure"
+            )
         return {
             "task": raw,
             "view": self.adapter.view(task, self.clock()),
             "plan": self.store.get("plans", task.merchant_id, task_id),
             "guidance": {k: advice[k] for k in ("guidance", "subgraph")} if advice else None,
-            "semantic_context": self.store.get("semantic_context", task.merchant_id, task_id),
+            "semantic_context": semantics,
             "knowledge_source": self.knowledge_source,
             "effective_prompt_hash": self.effective_prompt_identity["combined_hash"],
             "semantic_mode": {

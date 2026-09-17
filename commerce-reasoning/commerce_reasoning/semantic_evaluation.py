@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .semantic_audit import aggregate_audits, audit_definitions, load_oracle
 from .semantic_models import BUILDER_VERSION, content_hash
 from .semantic_release import behavioral_config, semantic_identity, source_identity
 
@@ -31,16 +32,101 @@ COMPARISON_MANIFEST = {
 }
 
 
-def semantic_metrics(events: list[dict]) -> dict:
+def semantic_metrics(events: list[dict], *, oracle: dict | None = None) -> dict:
     built = [e for e in events if e["event_type"] == "semantic_context_built"]
     failed = [e for e in events if e["event_type"] == "semantic_context_failed"]
+    starts = [e for e in events if e["event_type"] == "semantic_context_attempted"]
+    # A constructed bundle can subsequently exceed the full-payload limit. Count that
+    # as one failed attempt, not two attempts or a completed model request.
+    attempts = {e["context_attempt_id"] for e in starts if e.get("context_attempt_id")}
+    failures = {e["context_attempt_id"] for e in failed if e.get("context_attempt_id")}
+    measured = [e for e in events if e["event_type"] == "guidance_input_measured"]
+    attempt_count = len(attempts) if starts else len(built) + len(failed)
+    failure_count = len(failures) if starts else len(failed)
     return {
         "builds": len(built),
         "failures": len(failed),
-        "build_duration_ms": sum(e.get("duration_ms", 0) for e in built + failed),
+        "attempts": attempt_count,
+        "failed_attempts": failure_count,
+        "semantic_fallback_rate": failure_count / attempt_count if attempt_count else None,
+        "attempt_accounting": "request_id" if starts else "legacy_event_approximation",
+        "build_duration_ms": sum(e.get("duration_ms", 0) for e in built),
         "max_semantic_bytes": max((e.get("included_bytes", 0) for e in built), default=0),
+        "max_guidance_input_bytes": max(
+            (e.get("guidance_input_bytes", 0) for e in measured), default=0
+        ),
+        "guidance_input_measurements": len(measured),
+        "guidance_budget_failures": sum(e.get("within_budget") is False for e in measured),
+        "max_solver_request_bytes": max(
+            (
+                e.get("request_bytes", 0)
+                for e in events
+                if e["event_type"] == "solver_request_measured"
+            ),
+            default=0,
+        ),
         "omitted_optional_refs": sum(len(e.get("omitted_optional_refs", [])) for e in built),
+        "invalid_reference_count": sum(
+            e.get("error_code") in {"SEMANTIC_REF_MISSING", "SEMANTIC_REF_KIND_MISMATCH"}
+            for e in failed
+        ),
         "failure_codes": sorted({e.get("error_code", "unknown") for e in failed}),
+        "coverage": aggregate_audits([audit_definitions(e, oracle) for e in built]),
+    }
+
+
+def semantic_totals(rows: list[dict]) -> dict:
+    summed = {
+        key: sum(row.get(key, 0) for row in rows)
+        for key in (
+            "builds",
+            "failures",
+            "attempts",
+            "failed_attempts",
+            "build_duration_ms",
+            "guidance_input_measurements",
+            "guidance_budget_failures",
+            "omitted_optional_refs",
+            "invalid_reference_count",
+        )
+    }
+    coverage = {
+        key: sum(row.get("coverage", {}).get(key, 0) for row in rows)
+        for key in (
+            "required_expected",
+            "required_present",
+            "states_expected",
+            "states_present",
+            "irrelevant_definition_count",
+            "measured_builds",
+            "unmeasured_builds",
+            "failed_audits",
+        )
+    }
+    complete = coverage["measured_builds"] > 0 and coverage["unmeasured_builds"] == 0
+    coverage.update(
+        coverage_complete=complete,
+        required_definition_coverage=coverage["required_present"] / coverage["required_expected"]
+        if complete and coverage["required_expected"]
+        else None,
+        state_definition_coverage=coverage["states_present"] / coverage["states_expected"]
+        if complete and coverage["states_expected"]
+        else None,
+    )
+    return {
+        **summed,
+        "coverage": coverage,
+        "semantic_fallback_rate": summed["failed_attempts"] / summed["attempts"]
+        if summed["attempts"]
+        else None,
+        **{
+            key: max((row.get(key, 0) for row in rows), default=0)
+            for key in (
+                "max_semantic_bytes",
+                "max_guidance_input_bytes",
+                "max_solver_request_bytes",
+            )
+        },
     }
 
 
@@ -71,6 +157,7 @@ def comparison_fields(root: Any, service: Any, agent_config: Any) -> dict:
         "source_hash": source["source_hash"],
         "effective_prompt_hash": prompts["combined_hash"],
         "effective_budgets": effective_budgets,
+        "semantic_oracle_hash": content_hash(load_oracle(root)),
     }
     identity = None
     if registry:

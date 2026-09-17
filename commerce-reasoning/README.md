@@ -21,3 +21,9 @@ The retail integration supplies `ReasoningRetailMerchant`, which commits the sim
 Run `python -m pytest commerce-reasoning/tests`. See [configuration and operation](../docs/ontology-pg/README.md) and [the original specification](../commerce-agents_Ontology_PG_技术设计与实施文档.md).
 
 Opt-in semantic closure and reviewed publication: [implementation and commands](../docs/ontology-pg/semantic-context.md). Default legacy behavior and existing releases remain unchanged.
+
+`semantic_audit.py` compares recorded definitions with an independently transcribed
+specification oracle. `semantic_preflight.py` uses the same full-input projection
+and JSON serializer as the runtime, including typed facts, plans and events.
+`live_acceptance.py` runs explicit, bounded real-model comparisons only when model
+access is configured; it never publishes or changes active releases.
