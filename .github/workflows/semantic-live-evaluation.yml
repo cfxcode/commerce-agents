@@ -1,0 +1,35 @@
+name: semantic-live-evaluation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/semantic-live-evaluation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  prerequisites:
+    if: github.repository == 'cfxcode/commerce-agents' && (github.event_name == 'workflow_dispatch' || (github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/semantic-context-closure'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check configured model access (no requests, no secret values)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL || vars.ANTHROPIC_BASE_URL }}
+          COMMERCE_MODEL: ${{ vars.COMMERCE_MODEL || secrets.COMMERCE_MODEL }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          missing = [name for name in ('ANTHROPIC_API_KEY', 'COMMERCE_MODEL') if not os.environ.get(name)]
+          model = os.environ.get('COMMERCE_MODEL', '')
+          if model and not model.startswith('claude-') and not os.environ.get('ANTHROPIC_BASE_URL'):
+              missing.append('ANTHROPIC_BASE_URL')
+          status = 'BLOCKED: missing ' + ', '.join(missing) if missing else 'READY: required configuration is present; no model request has been made.'
+          print(status)
+          with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a') as stream:
+              stream.write('## Live model evaluation prerequisites\n\n' + status + '\n\nThis check does not run or claim to pass a model evaluation.\n')
+          PY
