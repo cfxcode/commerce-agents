@@ -39,18 +39,22 @@ class ModelBudget:
 
     def record(self, response) -> None:
         usage = getattr(response, "usage", None)
-        if usage is None:
+        if usage is None or any(
+            type(getattr(usage, name, None)) is not int or getattr(usage, name) < 0
+            for name in ("input_tokens", "output_tokens")
+        ):
             self.unmetered_calls += 1
             return
-        self.tokens += sum(
-            getattr(usage, name, 0) or 0
-            for name in (
-                "input_tokens",
-                "output_tokens",
-                "cache_read_input_tokens",
-                "cache_creation_input_tokens",
-            )
-        )
+        values = [usage.input_tokens, usage.output_tokens]
+        for name in ("cache_read_input_tokens", "cache_creation_input_tokens"):
+            value = getattr(usage, name, None)
+            if value is None:
+                value = 0
+            if type(value) is not int or value < 0:
+                self.unmetered_calls += 1
+                return
+            values.append(value)
+        self.tokens += sum(values)
 
 
 class BudgetedStream:
@@ -162,7 +166,11 @@ async def run(root: Path, out: Path, *, validation: bool, max_calls: int, max_to
         mode: ReasoningConfig.from_file(root / f"configs/experiments/p-{mode}.yaml")
         for mode in ("legacy", "closure")
     }
-    async with AsyncAnthropic(timeout=60, max_retries=0) as provider:
+    async with AsyncAnthropic(
+        base_url=os.environ.get("ANTHROPIC_BASE_URL") or "https://api.anthropic.com",
+        timeout=60,
+        max_retries=0,
+    ) as provider:
 
         class Client:
             messages = BudgetedMessages(provider.messages, budget)
