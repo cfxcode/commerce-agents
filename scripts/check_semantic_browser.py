@@ -129,10 +129,27 @@ def run_case(browser, root_url, out, *, locale, width, action, degraded):
                 else "Why are these definitions included?",
             ).click()
             expect(panel).to_contain_text("waiting_for_host")
-        panel.scroll_into_view_if_needed()
+        if not degraded:
+            panel.locator(
+                "summary",
+                has_text="为什么包含这些定义？"
+                if locale == "zh-CN"
+                else "Why are these definitions included?",
+            ).click()
+        # Align the collapsed panel inside the nested scroller for readable evidence.
+        panel.evaluate("""element => {
+            const main = element.closest('.portal-main');
+            main.scrollTop += element.getBoundingClientRect().top - main.getBoundingClientRect().top - 12;
+        }""")
+        page.wait_for_timeout(200)
+        expect(panel.get_by_role("heading")).to_be_visible()
         page.screenshot(path=str(out / f"{key}-semantic.png"), full_page=True)
         panel.screenshot(path=str(out / f"{key}-panel.png"))
-        # Wide PG canvases may scroll inside their containers, never overflow the page.
+        # Catch nested grid overflow as well as document overflow. The PG canvas
+        # may scroll within its own container, but the business page must not.
+        assert page.locator(".portal-main").evaluate(
+            "main => main.scrollWidth <= main.clientWidth + 2"
+        )
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 2")
         assert not errors, errors
         row.update(passed=True, state=final_state)
