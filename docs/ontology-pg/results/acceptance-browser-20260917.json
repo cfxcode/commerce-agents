@@ -1,0 +1,18 @@
+{
+  "source_commit": "8bd64a75b4fad3dd4f3ce0cb221b56977213544c",
+  "workflow_run": 35178650438,
+  "artifact_id": 10479162979,
+  "artifact_sha256": "11f668008cae166606ceb1101a0509c607a81eacd1302dfe262b53610b08edeb",
+  "passed": true,
+  "real_model_calls": 0,
+  "scope": "Real Chromium and built retail UI with actual isolated mock backend and guarded host actions; scripted solver and guidance models. Not a live model evaluation.",
+  "cases": [
+    {"locale": "en", "viewport_width": 1440, "action": "apply", "degraded": false, "passed": true, "stock_before": 12, "stock_after": 90, "phase": "SUCCESS", "pending": 0},
+    {"locale": "zh-CN", "viewport_width": 1440, "action": "discard", "degraded": false, "passed": true, "stock_before": 12, "stock_after": 12, "phase": "DECLINED", "pending": 0},
+    {"locale": "zh-CN", "viewport_width": 390, "action": "apply", "degraded": false, "passed": true, "stock_before": 12, "stock_after": 90, "phase": "SUCCESS", "pending": 0},
+    {"locale": "en", "viewport_width": 390, "action": "discard", "degraded": false, "passed": true, "stock_before": 12, "stock_after": 12, "phase": "DECLINED", "pending": 0},
+    {"locale": "en", "viewport_width": 1440, "action": "apply", "degraded": true, "passed": true, "stock_before": 12, "stock_after": 90, "phase": "SUCCESS", "pending": 0},
+    {"locale": "zh-CN", "viewport_width": 390, "action": "discard", "degraded": true, "passed": true, "stock_before": 12, "stock_after": 12, "phase": "DECLINED", "pending": 0}
+  ],
+  "credential_probe": {"run_id": 35176057556, "missing": ["ANTHROPIC_API_KEY", "COMMERCE_MODEL"], "real_model_evaluation": "blocked", "release_activated": false}
+}
